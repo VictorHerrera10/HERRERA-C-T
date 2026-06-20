@@ -45,12 +45,12 @@ export function CodexWidget() {
   return (
     <div
       className="fixed z-50"
-      style={{ bottom: 24, right: 24 }}
+      style={{ bottom: 20, right: 16 }}
     >
       {/* ── Panel del chat — abre hacia arriba sobre el botón ── */}
       <AnimatePresence>
         {open && (
-          <div style={{ position: "absolute", bottom: 72, right: 0 }}>
+          <div className="absolute bottom-[72px] right-0 w-[calc(100vw-32px)] max-w-[356px]">
             <CodexChat
               messages={messages}
               isTyping={isTyping}

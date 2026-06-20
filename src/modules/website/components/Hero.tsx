@@ -289,33 +289,6 @@ export function Hero({ content }: { content: HeroContent }) {
             {content.ctaSecondary}
           </motion.a>
         </motion.div>
-
-        {/* Estadísticas */}
-        <motion.dl
-          initial="hidden"
-          animate="show"
-          variants={{ show: { transition: { staggerChildren: 0.14, delayChildren: 1.9 } } }}
-          className="mt-12 grid max-w-2xl grid-cols-3 divide-x divide-edge border-t border-edge pt-6 sm:mt-20 sm:pt-8"
-        >
-          {content.stats.map((s, i) => (
-            <motion.div
-              key={i}
-              variants={{
-                hidden: { opacity: 0, y: 28 },
-                show: { opacity: 1, y: 0, transition: { duration: 0.7, ease } },
-              }}
-              className={i === 0 ? "pr-6" : "px-6"}
-            >
-              <dd className="font-display text-3xl font-bold text-snow sm:text-4xl">
-                <span className="text-crimson-bright">{s.value.charAt(0)}</span>
-                {s.value.slice(1)}
-              </dd>
-              <dt className="font-mono mt-2 text-[10px] uppercase tracking-[0.2em] text-ash">
-                {s.label}
-              </dt>
-            </motion.div>
-          ))}
-        </motion.dl>
       </motion.div>
 
       {/* Indicador de scroll */}

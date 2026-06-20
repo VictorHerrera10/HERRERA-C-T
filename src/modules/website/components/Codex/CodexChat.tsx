@@ -59,10 +59,9 @@ export function CodexChat({
       animate={{ opacity: 1, y: 0,  scale: 1    }}
       exit  ={{ opacity: 0, y: 20,  scale: 0.94 }}
       transition={{ type: "spring", stiffness: 360, damping: 30 }}
-      className="flex flex-col overflow-hidden"
+      className="flex flex-col overflow-hidden w-full"
       style={{
-        width: 356,
-        height: 520,
+        height: "min(520px, calc(100dvh - 120px))",
         borderRadius: 20,
         background: "linear-gradient(170deg,#0e0f14 0%,#080a0d 100%)",
         border: "1px solid rgba(216,17,43,0.4)",

@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   title: "Herrera Consulting & Technology — Consultoría y Tecnología",
   description:
     "Diseñamos, construimos y operamos la infraestructura digital de empresas que no pueden permitirse fallar. Software a medida, soporte TI continuo y consultoría estratégica.",
-  icons: { icon: "/logo.png" },
+  icons: { icon: "/code.ico" },
 };
 
 export default function RootLayout({

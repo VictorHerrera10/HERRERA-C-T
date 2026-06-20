@@ -9,9 +9,7 @@ const links = [
   { href: "#nosotros", label: "Nosotros" },
   { href: "#metodo", label: "Método" },
   { href: "#proyectos", label: "Proyectos" },
-  { href: "/ventas", label: "Tienda" },
   { href: "#contacto", label: "Contacto" },
-  { href: "/soporte", label: "Soporte" },
 ];
 
 export function Navbar() {
