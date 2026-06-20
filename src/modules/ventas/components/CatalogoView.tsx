@@ -650,8 +650,70 @@ export function CatalogoView() {
 
   return (
     <div className="min-h-screen bg-void">
-      {/* Hero */}
-      <div className="relative overflow-hidden border-b border-edge pb-16 pt-32">
+      {/* ── Barra superior propia (reemplaza Navbar) ── */}
+      <motion.header
+        initial={{ y: -56, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.55, ease }}
+        className="fixed inset-x-0 top-0 z-40 border-b border-edge bg-void/85 backdrop-blur-xl"
+      >
+        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3 lg:px-8">
+          {/* Logo + nombre */}
+          <a href="/" className="flex items-center gap-2.5 shrink-0">
+            <div className="logo-badge h-9 w-9 p-1.5">
+              <div className="relative h-full w-full">
+                <img src="/logo.png" alt="Herrera C&T" className="h-full w-full object-contain" />
+              </div>
+            </div>
+            <div className="hidden leading-tight sm:block">
+              <p className="font-display text-xs font-bold uppercase tracking-wide text-snow">Herrera C&T</p>
+              <p className="font-mono text-[8px] uppercase tracking-[0.24em] text-fog">Tienda</p>
+            </div>
+          </a>
+
+          {/* Buscador — ocupa el espacio central */}
+          <div className="relative flex-1">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-ash">
+              <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Buscar productos…"
+              className="w-full rounded-xl border border-edge bg-steel/50 py-2.5 pl-10 pr-4 text-sm text-snow outline-none placeholder:text-ash transition-colors focus:border-crimson/40"
+            />
+          </div>
+
+          {/* Usuario identificado (token) */}
+          {hasToken && (
+            <div className="hidden items-center gap-2 sm:flex">
+              <span className="h-1.5 w-1.5 rounded-full bg-esmeralda shadow-[0_0_5px_#1fce8c]" />
+              <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-fog">
+                {clientSession.session.user_name.split(" ")[0]}
+              </span>
+            </div>
+          )}
+
+          {/* Carrito */}
+          <button
+            onClick={() => setCartOpen(true)}
+            className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-edge bg-steel/50 text-snow transition-colors hover:border-crimson/50 hover:text-crimson-bright"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
+              <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
+              <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
+            </svg>
+            {cartCount > 0 && (
+              <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-crimson text-[10px] font-bold text-snow shadow-[0_0_10px_rgba(216,17,43,0.6)]">
+                {cartCount}
+              </span>
+            )}
+          </button>
+        </div>
+      </motion.header>
+
+      {/* ── Hero ── */}
+      <div className="relative overflow-hidden border-b border-edge pb-14 pt-28">
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute right-[-10%] top-[-20%] h-[32rem] w-[32rem] rounded-full bg-crimson/10 blur-[140px]" />
           <div className="absolute bottom-[-10%] left-[-5%] h-[24rem] w-[24rem] rounded-full bg-blood/20 blur-[120px]" />
@@ -682,32 +744,6 @@ export function CatalogoView() {
           <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, ease }} className="mt-4 max-w-lg text-base text-fog">
             Todo lo que tu empresa necesita, en un solo lugar. Solicita y el equipo te confirma disponibilidad.
           </motion.p>
-
-          {/* Búsqueda + botón carrito */}
-          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3, ease }} className="mt-8 flex items-center gap-3 max-w-sm">
-            <div className="relative flex-1">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ash">
-                <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
-              </svg>
-              <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar productos…"
-                className="w-full rounded-xl border border-edge bg-steel/50 py-3 pl-11 pr-4 text-sm text-snow outline-none placeholder:text-ash backdrop-blur-sm transition-colors focus:border-crimson/40" />
-            </div>
-            {/* Botón carrito */}
-            <button
-              onClick={() => setCartOpen(true)}
-              className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-edge bg-steel/50 text-snow transition-colors hover:border-crimson/50 hover:text-crimson-bright"
-            >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
-                <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
-                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-              </svg>
-              {cartCount > 0 && (
-                <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-crimson text-[10px] font-bold text-snow shadow-[0_0_10px_rgba(216,17,43,0.6)]">
-                  {cartCount}
-                </span>
-              )}
-            </button>
-          </motion.div>
         </div>
       </div>
 

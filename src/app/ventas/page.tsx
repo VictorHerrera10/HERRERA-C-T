@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { Navbar } from "@/modules/website/components/Navbar";
 import { CatalogoView } from "@/modules/ventas/components/CatalogoView";
 
 export const metadata: Metadata = {
@@ -10,11 +9,8 @@ export const metadata: Metadata = {
 
 export default function VentasPage() {
   return (
-    <>
-      <Navbar />
-      <Suspense>
-        <CatalogoView />
-      </Suspense>
-    </>
+    <Suspense>
+      <CatalogoView />
+    </Suspense>
   );
 }
