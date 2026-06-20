@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { supabase } from "@/modules/shared/lib/supabase";
 import { Icon } from "@/modules/shared/components/Icon";
 import { FloatingIcons } from "@/modules/shared/components/FloatingIcons";
 import { useToast } from "@/modules/shared/components/Toast";
+import { useClientSession } from "@/modules/shared/hooks/useClientSession";
 import {
   type Ticket,
   type TicketComment,
@@ -180,6 +181,7 @@ type Mode = "crear" | "seguir";
 
 export function ClientPortal() {
   const [mode, setMode] = useState<Mode>("crear");
+  const clientSession = useClientSession();
 
   /* asistente */
   const [step, setStep] = useState(0);
@@ -197,6 +199,20 @@ export function ClientPortal() {
   const [trackComments, setTrackComments] = useState<TicketComment[]>([]);
   const [trackReply, setTrackReply] = useState("");
 
+  /* Si viene con token, pre-llenar datos y saltar paso 0 */
+  useEffect(() => {
+    if (clientSession.status !== "ready") return;
+    const s = clientSession.session;
+    setDatos({
+      nombre: s.user_name,
+      empresa: s.client_name,
+      correo: s.user_email,
+    });
+    setTrackEmail(s.user_email);
+    setStep(1); // saltar directo a categoría
+  }, [clientSession.status]);
+
+  const hasToken = clientSession.status === "ready" || clientSession.status === "loading";
   const emailOk = /\S+@\S+\.\S+/.test(datos.correo);
   const datosOk = datos.nombre.trim().length > 1 && emailOk;
 
@@ -375,17 +391,43 @@ export function ClientPortal() {
               {/* Progreso */}
               {step < 4 && (
                 <div className="mb-10">
+                  {/* Tarjeta de identidad cuando viene con token */}
+                  {hasToken && clientSession.status === "ready" && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="mb-6 flex items-center gap-3 rounded-lg border border-esmeralda/30 bg-esmeralda/8 px-4 py-3"
+                    >
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-esmeralda/20 text-esmeralda">
+                        <Icon name="shield" className="h-4 w-4" />
+                      </span>
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-snow">{clientSession.session.user_name}</p>
+                        <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-fog">
+                          {clientSession.session.client_name}
+                          {clientSession.session.user_role ? ` · ${clientSession.session.user_role}` : ""}
+                        </p>
+                      </div>
+                      <span className="font-mono ml-auto shrink-0 text-[9px] uppercase tracking-[0.18em] text-esmeralda">
+                        ● Identificado
+                      </span>
+                    </motion.div>
+                  )}
                   <div className="mb-2 flex items-center justify-between">
                     <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-crimson-bright">
-                      [ Paso {Math.min(step, 3) + 1} / 04 ]
+                      {hasToken
+                        ? `[ Paso ${Math.min(step, 2)} / 03 ]`
+                        : `[ Paso ${Math.min(step, 3) + 1} / 04 ]`}
                     </span>
                     <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-ash">
-                      {["Tus datos", "Tipo de solicitud", "Detalles", "Confirmar"][Math.min(step, 3)]}
+                      {hasToken
+                        ? ["Tipo de solicitud", "Tipo de solicitud", "Detalles", "Confirmar"][Math.min(step, 3)]
+                        : ["Tus datos", "Tipo de solicitud", "Detalles", "Confirmar"][Math.min(step, 3)]}
                     </span>
                   </div>
                   <div className="h-[3px] overflow-hidden rounded-full bg-steel">
                     <motion.div
-                      animate={{ width: `${(Math.min(step, 3) + 1) * 25}%` }}
+                      animate={{ width: hasToken ? `${Math.min(step, 3) * 33.3}%` : `${(Math.min(step, 3) + 1) * 25}%` }}
                       transition={{ duration: 0.5, ease }}
                       className="h-full bg-gradient-to-r from-crimson to-crimson-bright shadow-[0_0_12px_rgba(216,17,43,0.6)]"
                     />

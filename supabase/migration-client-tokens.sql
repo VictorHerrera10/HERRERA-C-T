@@ -53,8 +53,8 @@ declare
   v_token text;
   v_id    uuid;
 begin
-  -- Genera token aleatorio de 20 chars (hex seguro)
-  v_token := encode(gen_random_bytes(15), 'hex');
+  -- Genera token aleatorio de 30 chars hex (pgcrypto vive en extensions)
+  v_token := encode(extensions.gen_random_bytes(15), 'hex');
 
   insert into client_tokens (
     token, user_name, user_dni, user_email, user_phone, user_role,
