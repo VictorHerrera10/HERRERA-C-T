@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { ClientPortal } from "@/modules/helpdesk/components/ClientPortal";
 
@@ -8,5 +9,9 @@ export const metadata: Metadata = {
 };
 
 export default function SoportePage() {
-  return <ClientPortal />;
+  return (
+    <Suspense>
+      <ClientPortal />
+    </Suspense>
+  );
 }

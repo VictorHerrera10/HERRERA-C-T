@@ -30,9 +30,7 @@ type State =
 export function useClientSession(): State {
   const params = useSearchParams();
   const token = params.get("token");
-  const [state, setState] = useState<State>(
-    token ? { status: "loading" } : { status: "none" }
-  );
+  const [state, setState] = useState<State>({ status: "idle" });
 
   useEffect(() => {
     if (!token) { setState({ status: "none" }); return; }

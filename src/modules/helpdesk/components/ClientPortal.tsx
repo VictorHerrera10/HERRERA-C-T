@@ -203,14 +203,10 @@ export function ClientPortal() {
   useEffect(() => {
     if (clientSession.status !== "ready") return;
     const s = clientSession.session;
-    setDatos({
-      nombre: s.user_name,
-      empresa: s.client_name,
-      correo: s.user_email,
-    });
+    setDatos({ nombre: s.user_name, empresa: s.client_name, correo: s.user_email });
     setTrackEmail(s.user_email);
-    setStep(1); // saltar directo a categoría
-  }, [clientSession.status]);
+    setStep(1);
+  }, [clientSession.status]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const hasToken = clientSession.status === "ready" || clientSession.status === "loading";
   const emailOk = /\S+@\S+\.\S+/.test(datos.correo);
