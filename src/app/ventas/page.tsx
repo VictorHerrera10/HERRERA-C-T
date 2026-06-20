@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Navbar } from "@/modules/website/components/Navbar";
 import { CatalogoView } from "@/modules/ventas/components/CatalogoView";
@@ -11,7 +12,9 @@ export default function VentasPage() {
   return (
     <>
       <Navbar />
-      <CatalogoView />
+      <Suspense>
+        <CatalogoView />
+      </Suspense>
     </>
   );
 }
