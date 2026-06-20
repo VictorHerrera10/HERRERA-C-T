@@ -198,6 +198,8 @@ export function ClientPortal() {
   const [tracked, setTracked] = useState<Ticket | null>(null);
   const [trackComments, setTrackComments] = useState<TicketComment[]>([]);
   const [trackReply, setTrackReply] = useState("");
+  const [myTickets, setMyTickets] = useState<Ticket[]>([]);
+  const [loadingMyTickets, setLoadingMyTickets] = useState(false);
 
   /* Si viene con token, pre-llenar datos y saltar paso 0 */
   useEffect(() => {
@@ -207,6 +209,41 @@ export function ClientPortal() {
     setTrackEmail(s.user_email);
     setStep(1);
   }, [clientSession.status]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  /* Carga todos los tickets del usuario identificado por token */
+  async function loadMyTickets(email: string) {
+    setLoadingMyTickets(true);
+    setMyTickets([]);
+    setTracked(null);
+    const { data, error } = await supabase
+      .from("tickets")
+      .select("*")
+      .eq("client_email", email.trim().toLowerCase())
+      .order("created_at", { ascending: false });
+    setLoadingMyTickets(false);
+    if (error || !data?.length) return;
+    const list = data as Ticket[];
+    setMyTickets(list);
+    // Si solo hay uno, abrirlo directo
+    if (list.length === 1) openTicket(list[0]);
+  }
+
+  async function openTicket(ticket: Ticket) {
+    setTracked(ticket);
+    const { data } = await supabase
+      .from("ticket_comments")
+      .select("*")
+      .eq("ticket_id", ticket.id)
+      .order("created_at");
+    setTrackComments((data as TicketComment[]) ?? []);
+  }
+
+  /* Al cambiar a modo seguir con token activo, cargar tickets automáticamente */
+  useEffect(() => {
+    if (mode !== "seguir") return;
+    if (clientSession.status !== "ready") return;
+    loadMyTickets(clientSession.session.user_email);
+  }, [mode, clientSession.status]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const hasToken = clientSession.status === "ready" || clientSession.status === "loading";
   const emailOk = /\S+@\S+\.\S+/.test(datos.correo);
@@ -244,10 +281,7 @@ export function ClientPortal() {
     const n = parseInt(code.replace(/\D/g, ""), 10);
     setTracked(null);
     if (!n || !email) {
-      toast.warning(
-        "Faltan datos",
-        "Ingresa el código del ticket (ej. HCT-0012) y tu correo."
-      );
+      toast.warning("Faltan datos", "Ingresa el código del ticket (ej. HCT-0012) y tu correo.");
       return;
     }
     const { data, error } = await supabase
@@ -257,26 +291,21 @@ export function ClientPortal() {
       .eq("client_email", email)
       .maybeSingle();
     if (error || !data) {
-      toast.error(
-        "Ticket no encontrado",
-        "No hay un ticket con ese código y correo. Revisa los datos."
-      );
+      toast.error("Ticket no encontrado", "No hay un ticket con ese código y correo. Revisa los datos.");
       return;
     }
-    setTracked(data as Ticket);
-    const { data: c } = await supabase
-      .from("ticket_comments")
-      .select("*")
-      .eq("ticket_id", data.id)
-      .order("created_at");
-    setTrackComments((c as TicketComment[]) ?? []);
+    await openTicket(data as Ticket);
   }
 
   async function sendTrackReply() {
     if (!tracked || !trackReply.trim()) return;
+    const author =
+      clientSession.status === "ready"
+        ? clientSession.session.user_name
+        : tracked.client_name.split("—")[0].trim() || "Cliente";
     await supabase.from("ticket_comments").insert({
       ticket_id: tracked.id,
-      author: tracked.client_name.split("—")[0].trim() || "Cliente",
+      author,
       body: trackReply.trim(),
     });
     await supabase
@@ -284,7 +313,7 @@ export function ClientPortal() {
       .update({ updated_at: new Date().toISOString() })
       .eq("id", tracked.id);
     setTrackReply("");
-    track(ticketCode(tracked.ticket_no), tracked.client_email);
+    openTicket(tracked);
   }
 
   function resetWizard() {
@@ -855,26 +884,84 @@ export function ClientPortal() {
                 <WordReveal text="Sigue tu" />
                 <WordReveal text="ticket" className="text-shimmer" />
               </h1>
-              <p className="mt-4 text-center text-sm text-fog">
-                Ingresa el código que recibiste y el correo con el que lo creaste.
-              </p>
 
-              <div className="mx-auto mt-9 flex max-w-lg flex-col gap-3 sm:flex-row sm:gap-4">
-                <input
-                  className="field-dark font-mono uppercase"
-                  placeholder="HCT-0000"
-                  value={trackCode}
-                  onChange={(e) => setTrackCode(e.target.value)}
-                />
-                <input
-                  className="field-dark"
-                  type="email"
-                  placeholder="tu@empresa.com"
-                  value={trackEmail}
-                  onChange={(e) => setTrackEmail(e.target.value)}
-                />
-                <PrimaryButton onClick={() => track()}>Buscar</PrimaryButton>
-              </div>
+              {/* Con token: buscador automático */}
+              {clientSession.status === "ready" ? (
+                <div className="mt-6">
+                  {loadingMyTickets && (
+                    <p className="font-mono text-center text-xs uppercase tracking-[0.2em] text-fog">
+                      Cargando tus tickets…
+                    </p>
+                  )}
+
+                  {!loadingMyTickets && !tracked && myTickets.length === 0 && (
+                    <p className="mt-4 text-center text-sm text-fog">
+                      No tienes tickets registrados aún.
+                    </p>
+                  )}
+
+                  {/* Lista de tickets */}
+                  {!loadingMyTickets && !tracked && myTickets.length > 1 && (
+                    <div className="mt-4 space-y-3">
+                      <p className="font-mono text-center text-[10px] uppercase tracking-[0.2em] text-fog mb-4">
+                        {myTickets.length} tickets encontrados — selecciona uno
+                      </p>
+                      {myTickets.map((t) => (
+                        <motion.button
+                          key={t.id}
+                          initial={{ opacity: 0, y: 12 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          whileHover={{ y: -2 }}
+                          onClick={() => openTicket(t)}
+                          className="hud-corners w-full rounded-lg border border-edge bg-steel/50 p-4 text-left backdrop-blur-sm transition-colors hover:border-crimson/40"
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="min-w-0">
+                              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-ash">
+                                {ticketCode(t.ticket_no)} · {timeAgo(t.created_at)}
+                              </p>
+                              <p className="mt-1 truncate text-sm font-bold text-snow">
+                                {t.title}
+                              </p>
+                            </div>
+                            <div className="flex shrink-0 flex-col items-end gap-1.5">
+                              <span className={`font-mono rounded px-2 py-0.5 text-[9px] uppercase tracking-[0.14em] ${STATUS[t.status].badge}`}>
+                                {STATUS[t.status].label}
+                              </span>
+                              <span className={`font-mono rounded px-2 py-0.5 text-[9px] uppercase tracking-[0.14em] ${CATEGORY[t.category].chip}`}>
+                                {CATEGORY[t.category].label}
+                              </span>
+                            </div>
+                          </div>
+                        </motion.button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* Sin token: buscador manual */
+                <>
+                  <p className="mt-4 text-center text-sm text-fog">
+                    Ingresa el código que recibiste y el correo con el que lo creaste.
+                  </p>
+                  <div className="mx-auto mt-9 flex max-w-lg flex-col gap-3 sm:flex-row sm:gap-4">
+                    <input
+                      className="field-dark font-mono uppercase"
+                      placeholder="HCT-0000"
+                      value={trackCode}
+                      onChange={(e) => setTrackCode(e.target.value)}
+                    />
+                    <input
+                      className="field-dark"
+                      type="email"
+                      placeholder="tu@empresa.com"
+                      value={trackEmail}
+                      onChange={(e) => setTrackEmail(e.target.value)}
+                    />
+                    <PrimaryButton onClick={() => track()}>Buscar</PrimaryButton>
+                  </div>
+                </>
+              )}
 
 
               {tracked && (
@@ -882,8 +969,17 @@ export function ClientPortal() {
                   initial={{ opacity: 0, y: 24 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.55, ease }}
-                  className="hud-corners mt-10 rounded-lg border border-edge bg-steel/60 p-6 backdrop-blur-sm lg:p-8"
+                  className="mt-6"
                 >
+                  {myTickets.length > 1 && (
+                    <button
+                      onClick={() => setTracked(null)}
+                      className="font-mono mb-4 text-[11px] uppercase tracking-[0.18em] text-fog transition-colors hover:text-snow"
+                    >
+                      ← Mis tickets
+                    </button>
+                  )}
+                <div className="hud-corners rounded-lg border border-edge bg-steel/60 p-6 backdrop-blur-sm lg:p-8">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
                       <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-ash">
@@ -971,6 +1067,7 @@ export function ClientPortal() {
                       <PrimaryButton onClick={sendTrackReply}>Enviar</PrimaryButton>
                     </div>
                   </div>
+                </div>
                 </motion.div>
               )}
             </motion.div>
