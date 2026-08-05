@@ -24,15 +24,12 @@ export default function AdminHome() {
       const [s, t, l] = await Promise.all([
         supabase.from("services").select("id", { count: "exact", head: true }),
         supabase.from("testimonials").select("id", { count: "exact", head: true }),
-        supabase
-          .from("leads")
-          .select("id", { count: "exact", head: true })
-          .eq("read", false),
+        supabase.rpc("hct_public_unread_leads_count"),
       ]);
       setStats({
         services: s.count,
         testimonials: t.count,
-        unreadLeads: l.count,
+        unreadLeads: l.data as number | null,
         dbOk: !s.error,
       });
     }

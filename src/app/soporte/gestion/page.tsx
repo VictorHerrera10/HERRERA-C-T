@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import { supabase } from "@/modules/shared/lib/supabase";
 import { useToast } from "@/modules/shared/components/Toast";
+import { AuthGuard } from "@/modules/auth/components/AuthGuard";
+import { getSession } from "@/modules/auth/lib/auth";
 import {
   type Ticket,
   type TicketStatus,
@@ -40,6 +42,14 @@ const NEW_TICKET: NewTicket = {
 };
 
 export default function TicketsPage() {
+  return (
+    <AuthGuard module="helpdesk">
+      <TicketsPageContent />
+    </AuthGuard>
+  );
+}
+
+function TicketsPageContent() {
   const router = useRouter();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
@@ -51,14 +61,16 @@ export default function TicketsPage() {
   const [saving, setSaving] = useState(false);
 
   async function load() {
-    const { data, error } = await supabase
-      .from("tickets")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const token = getSession()?.session_token;
+    if (!token) return;
+    const { data, error } = await supabase.rpc("hct_list_tickets", {
+      p_token: token,
+      p_status: null,
+    });
     if (error)
       toast.error(
         "No se pudo cargar la mesa de ayuda",
-        `${error.message} — si las tablas no existen, ejecuta supabase/migration-tickets.sql`
+        `${error.message} — si las funciones no existen, ejecuta supabase/migration-mobile.sql`
       );
     else setTickets((data as Ticket[]) ?? []);
     setLoading(false);
@@ -108,18 +120,24 @@ export default function TicketsPage() {
 
   async function createTicket() {
     if (!draft.title.trim()) return;
+    const token = getSession()?.session_token;
+    if (!token) return;
     setSaving(true);
-    const { data, error } = await supabase
-      .from("tickets")
-      .insert(draft)
-      .select()
-      .single();
+    const { data, error } = await supabase.rpc("hct_create_ticket", {
+      p_token: token,
+      p_title: draft.title,
+      p_description: draft.description,
+      p_client_name: draft.client_name,
+      p_client_email: draft.client_email,
+      p_category: draft.category,
+      p_priority: draft.priority,
+    });
     setSaving(false);
     if (error) return toast.error("No se pudo crear el ticket", error.message);
     toast.success("Ticket creado");
     setModalOpen(false);
     setDraft({ ...NEW_TICKET });
-    if (data) router.push(`/soporte/gestion/${data.id}`);
+    if (data) router.push(`/soporte/gestion/${(data as Ticket).id}`);
   }
 
   const cards = [

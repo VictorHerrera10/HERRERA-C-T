@@ -19,11 +19,11 @@ export function Contact({ content }: { content: ContactContent }) {
     const form = e.currentTarget;
     const data = new FormData(form);
     setStatus("sending");
-    const { error } = await supabase.from("leads").insert({
-      name: String(data.get("name") ?? ""),
-      email: String(data.get("email") ?? ""),
-      company: String(data.get("company") ?? ""),
-      message: String(data.get("message") ?? ""),
+    const { error } = await supabase.rpc("hct_public_create_lead", {
+      p_name: String(data.get("name") ?? ""),
+      p_email: String(data.get("email") ?? ""),
+      p_company: String(data.get("company") ?? ""),
+      p_message: String(data.get("message") ?? ""),
     });
     setStatus("idle");
     if (error) {

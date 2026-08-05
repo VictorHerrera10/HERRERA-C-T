@@ -6,6 +6,8 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "motion/react";
 import { supabase } from "@/modules/shared/lib/supabase";
 import { useToast } from "@/modules/shared/components/Toast";
+import { AuthGuard } from "@/modules/auth/components/AuthGuard";
+import { getSession } from "@/modules/auth/lib/auth";
 import {
   type Ticket,
   type TicketComment,
@@ -22,6 +24,14 @@ import {
 const ease = [0.21, 0.6, 0.35, 1] as const;
 
 export default function TicketDetailPage() {
+  return (
+    <AuthGuard module="helpdesk">
+      <TicketDetailPageContent />
+    </AuthGuard>
+  );
+}
+
+function TicketDetailPageContent() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [ticket, setTicket] = useState<Ticket | null>(null);
@@ -32,19 +42,20 @@ export default function TicketDetailPage() {
   const toast = useToast();
 
   const load = useCallback(async () => {
-    const [t, c] = await Promise.all([
-      supabase.from("tickets").select("*").eq("id", id).maybeSingle(),
-      supabase
-        .from("ticket_comments")
-        .select("*")
-        .eq("ticket_id", id)
-        .order("created_at"),
-    ]);
-    if (t.error) {
+    const token = getSession()?.session_token;
+    if (!token) return;
+    const { data, error } = await supabase.rpc("hct_get_ticket", {
+      p_token: token,
+      p_ticket_id: id,
+    });
+    if (error) {
       setLoadFailed(true);
-      toast.error("No se pudo cargar el ticket", t.error.message);
-    } else setTicket(t.data as Ticket | null);
-    setComments((c.data as TicketComment[]) ?? []);
+      toast.error("No se pudo cargar el ticket", error.message);
+      return;
+    }
+    const result = data as { ticket: Ticket | null; comments: TicketComment[] };
+    setTicket(result.ticket);
+    setComments(result.comments ?? []);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
@@ -54,36 +65,39 @@ export default function TicketDetailPage() {
 
   async function update(fields: Partial<Ticket>) {
     if (!ticket) return;
+    const token = getSession()?.session_token;
+    if (!token) return;
     setTicket({ ...ticket, ...fields });
-    await supabase
-      .from("tickets")
-      .update({ ...fields, updated_at: new Date().toISOString() })
-      .eq("id", ticket.id);
+    await supabase.rpc("hct_update_ticket", {
+      p_token: token,
+      p_ticket_id: ticket.id,
+      p_fields: fields,
+    });
   }
 
   async function sendReply() {
     if (!reply.trim() || !ticket) return;
+    const token = getSession()?.session_token;
+    if (!token) return;
     setSending(true);
-    const { error } = await supabase.from("ticket_comments").insert({
-      ticket_id: ticket.id,
-      author: "Herrera C&T",
-      body: reply.trim(),
+    const { error } = await supabase.rpc("hct_add_comment", {
+      p_token: token,
+      p_ticket_id: ticket.id,
+      p_body: reply.trim(),
     });
     setSending(false);
     if (error) return toast.error("No se pudo enviar la respuesta", error.message);
     setReply("");
-    await supabase
-      .from("tickets")
-      .update({ updated_at: new Date().toISOString() })
-      .eq("id", ticket.id);
     load();
   }
 
   async function removeTicket() {
     if (!ticket) return;
+    const token = getSession()?.session_token;
+    if (!token) return;
     if (!confirm(`¿Eliminar el ticket ${ticketCode(ticket.ticket_no)} y toda su conversación?`))
       return;
-    await supabase.from("tickets").delete().eq("id", ticket.id);
+    await supabase.rpc("hct_delete_ticket", { p_token: token, p_ticket_id: ticket.id });
     router.push("/soporte/gestion");
   }
 

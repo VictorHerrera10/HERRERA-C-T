@@ -66,6 +66,11 @@ export type SessionUser = {
   modules: ModuleKey[];
   must_change_password: boolean;
   active: boolean;
+  /* Agregado por supabase/migration-mobile.sql: token de sesión server-side
+     que exigen las funciones hct_* (tickets/leads). Puede faltar si la sesión
+     se guardó antes de ejecutar esa migración — en ese caso hay que
+     re-loguearse. */
+  session_token?: string;
 };
 
 export type Area = { id: string; name: string };

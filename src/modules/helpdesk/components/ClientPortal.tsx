@@ -215,14 +215,12 @@ export function ClientPortal() {
     setLoadingMyTickets(true);
     setMyTickets([]);
     setTracked(null);
-    const { data, error } = await supabase
-      .from("tickets")
-      .select("*")
-      .eq("client_email", email.trim().toLowerCase())
-      .order("created_at", { ascending: false });
+    const { data, error } = await supabase.rpc("hct_public_list_tickets_by_email", {
+      p_email: email.trim().toLowerCase(),
+    });
     setLoadingMyTickets(false);
-    if (error || !data?.length) return;
-    const list = data as Ticket[];
+    const list = (data as Ticket[]) ?? [];
+    if (error || !list.length) return;
     setMyTickets(list);
     // Si solo hay uno, abrirlo directo
     if (list.length === 1) openTicket(list[0]);
@@ -230,11 +228,9 @@ export function ClientPortal() {
 
   async function openTicket(ticket: Ticket) {
     setTracked(ticket);
-    const { data } = await supabase
-      .from("ticket_comments")
-      .select("*")
-      .eq("ticket_id", ticket.id)
-      .order("created_at");
+    const { data } = await supabase.rpc("hct_public_get_ticket_comments", {
+      p_ticket_id: ticket.id,
+    });
     setTrackComments((data as TicketComment[]) ?? []);
   }
 
@@ -253,16 +249,14 @@ export function ClientPortal() {
     if (!category) return;
     setSending(true);
     const built = buildTicket(category, datos, detalle);
-    const { data, error } = await supabase
-      .from("tickets")
-      .insert({
-        ...built,
-        category,
-        client_name: clientDisplayName(datos),
-        client_email: datos.correo.trim().toLowerCase(),
-      })
-      .select()
-      .single();
+    const { data, error } = await supabase.rpc("hct_public_create_ticket", {
+      p_title: built.title,
+      p_description: built.description,
+      p_client_name: clientDisplayName(datos),
+      p_client_email: datos.correo.trim().toLowerCase(),
+      p_category: category,
+      p_priority: built.priority,
+    });
     setSending(false);
     if (error) {
       toast.error(
@@ -284,17 +278,17 @@ export function ClientPortal() {
       toast.warning("Faltan datos", "Ingresa el código del ticket (ej. HCT-0012) y tu correo.");
       return;
     }
-    const { data, error } = await supabase
-      .from("tickets")
-      .select("*")
-      .eq("ticket_no", n)
-      .eq("client_email", email)
-      .maybeSingle();
-    if (error || !data) {
+    const { data, error } = await supabase.rpc("hct_public_get_ticket_by_code", {
+      p_ticket_no: n,
+      p_email: email,
+    });
+    const result = data as { ticket: Ticket; comments: TicketComment[] } | null;
+    if (error || !result) {
       toast.error("Ticket no encontrado", "No hay un ticket con ese código y correo. Revisa los datos.");
       return;
     }
-    await openTicket(data as Ticket);
+    setTracked(result.ticket);
+    setTrackComments(result.comments ?? []);
   }
 
   async function sendTrackReply() {
@@ -303,15 +297,12 @@ export function ClientPortal() {
       clientSession.status === "ready"
         ? clientSession.session.user_name
         : tracked.client_name.split("—")[0].trim() || "Cliente";
-    await supabase.from("ticket_comments").insert({
-      ticket_id: tracked.id,
-      author,
-      body: trackReply.trim(),
+    await supabase.rpc("hct_public_add_ticket_comment", {
+      p_ticket_id: tracked.id,
+      p_client_email: tracked.client_email,
+      p_author: author,
+      p_body: trackReply.trim(),
     });
-    await supabase
-      .from("tickets")
-      .update({ updated_at: new Date().toISOString() })
-      .eq("id", tracked.id);
     setTrackReply("");
     openTicket(tracked);
   }
