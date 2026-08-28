@@ -7,7 +7,6 @@ import { motion, AnimatePresence } from "motion/react";
 import { supabase } from "@/modules/shared/lib/supabase";
 import { useToast } from "@/modules/shared/components/Toast";
 import { AuthGuard } from "@/modules/auth/components/AuthGuard";
-import { getSession } from "@/modules/auth/lib/auth";
 import {
   type Ticket,
   type TicketComment,
@@ -42,10 +41,7 @@ function TicketDetailPageContent() {
   const toast = useToast();
 
   const load = useCallback(async () => {
-    const token = getSession()?.session_token;
-    if (!token) return;
     const { data, error } = await supabase.rpc("hct_get_ticket", {
-      p_token: token,
       p_ticket_id: id,
     });
     if (error) {
@@ -65,11 +61,8 @@ function TicketDetailPageContent() {
 
   async function update(fields: Partial<Ticket>) {
     if (!ticket) return;
-    const token = getSession()?.session_token;
-    if (!token) return;
     setTicket({ ...ticket, ...fields });
     await supabase.rpc("hct_update_ticket", {
-      p_token: token,
       p_ticket_id: ticket.id,
       p_fields: fields,
     });
@@ -77,11 +70,8 @@ function TicketDetailPageContent() {
 
   async function sendReply() {
     if (!reply.trim() || !ticket) return;
-    const token = getSession()?.session_token;
-    if (!token) return;
     setSending(true);
     const { error } = await supabase.rpc("hct_add_comment", {
-      p_token: token,
       p_ticket_id: ticket.id,
       p_body: reply.trim(),
     });
@@ -93,11 +83,9 @@ function TicketDetailPageContent() {
 
   async function removeTicket() {
     if (!ticket) return;
-    const token = getSession()?.session_token;
-    if (!token) return;
     if (!confirm(`¿Eliminar el ticket ${ticketCode(ticket.ticket_no)} y toda su conversación?`))
       return;
-    await supabase.rpc("hct_delete_ticket", { p_token: token, p_ticket_id: ticket.id });
+    await supabase.rpc("hct_delete_ticket", { p_ticket_id: ticket.id });
     router.push("/soporte/gestion");
   }
 

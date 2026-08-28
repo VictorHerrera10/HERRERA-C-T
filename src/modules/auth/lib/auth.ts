@@ -81,26 +81,47 @@ export type AppUser = SessionUser & {
   created_at: string;
 };
 
-/* ── Sesión (localStorage; auth definitivo en fase final) ──── */
+/* ── Sesión ────────────────────────────────────────────────
+   La sesión (token, expiración, refresh) la maneja el SDK de Supabase
+   Auth internamente en su propio localStorage. Aquí solo cacheamos en
+   MEMORIA el perfil de negocio (área, rol, módulos) para que
+   getSession() siga siendo síncrona — así AuthGuard, PlatformShell,
+   etc. no cambian de firma. El caché se llena en login() y se puede
+   refrescar con loadSessionUser(). */
 
-const SESSION_KEY = "hct.session";
+const SESSION_KEY = "hct.session"; // legado: se limpia si quedó de una sesión vieja
+let cachedUser: SessionUser | null = null;
 
 export function getSession(): SessionUser | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = localStorage.getItem(SESSION_KEY);
-    return raw ? (JSON.parse(raw) as SessionUser) : null;
-  } catch {
-    return null;
-  }
+  return cachedUser;
 }
 
 export function saveSession(user: SessionUser) {
-  localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+  cachedUser = user;
 }
 
-export function clearSession() {
-  localStorage.removeItem(SESSION_KEY);
+export async function clearSession() {
+  cachedUser = null;
+  if (typeof window !== "undefined") localStorage.removeItem(SESSION_KEY);
+  await supabase.auth.signOut();
+}
+
+/* Reconstruye el perfil de negocio desde la sesión de Supabase Auth
+   activa (si hay una). Se llama al cargar la app (AuthGuard) para
+   restaurar cachedUser tras un refresh de página. */
+export async function loadSessionUser(): Promise<SessionUser | null> {
+  const { data } = await supabase.auth.getSession();
+  if (!data.session) {
+    cachedUser = null;
+    return null;
+  }
+  const { data: profile, error } = await supabase.rpc("hct_my_profile");
+  if (error || !profile) {
+    cachedUser = null;
+    return null;
+  }
+  cachedUser = profile as SessionUser;
+  return cachedUser;
 }
 
 export function canAccess(user: SessionUser, module: ModuleKey): boolean {
@@ -116,30 +137,53 @@ export function roleLabel(user: SessionUser): string {
   return user.is_admin ? "Administrador de la plataforma" : "Integrante del equipo";
 }
 
-/* ── Llamadas a Supabase (RPCs de migration-usuarios.sql) ──── */
+/* ── Login del sitio web vía Supabase Auth ───────────────────
+   El trabajador sigue ingresando con su DNI; por debajo se mapea a un
+   email interno "<dni>@herrera-ct.local" (creado en /api/admin/users
+   al dar de alta al trabajador — ver supabase/migration-auth-supabase.sql). */
 
 export async function login(
   dni: string,
   password: string
 ): Promise<SessionUser | null> {
-  const { data, error } = await supabase.rpc("auth_login", {
-    p_dni: dni,
-    p_password: password,
+  const { error: authError } = await supabase.auth.signInWithPassword({
+    email: authEmailForDni(dni),
+    password,
   });
-  if (error) throw new Error(error.message);
-  return (data as SessionUser) ?? null;
+  if (authError) {
+    // Credenciales inválidas o usuario inexistente: mismo comportamiento
+    // que antes (auth_login devolvía null en vez de lanzar).
+    return null;
+  }
+  return loadSessionUser();
 }
 
 export async function changePassword(
-  userId: string,
+  _userId: string,
   current: string,
   next: string
 ): Promise<boolean> {
-  const { data, error } = await supabase.rpc("auth_change_password", {
-    p_user_id: userId,
-    p_current: current,
-    p_new: next,
-  });
+  // Re-verifica la contraseña actual (Supabase Auth no la vuelve a pedir
+  // para updateUser() con sesión activa, pero la UI la exige como
+  // confirmación de identidad, igual que hacía auth_change_password antes).
+  const email = cachedUser ? authEmailForDni(cachedUser.dni) : null;
+  if (email) {
+    const { error: verifyError } = await supabase.auth.signInWithPassword({
+      email,
+      password: current,
+    });
+    if (verifyError) return false;
+  }
+
+  const { error: updateError } = await supabase.auth.updateUser({ password: next });
+  if (updateError) throw new Error(updateError.message);
+
+  const { data, error } = await supabase.rpc("hct_complete_password_change");
   if (error) throw new Error(error.message);
-  return data === true;
+  if (data) cachedUser = data as SessionUser;
+  return true;
+}
+
+function authEmailForDni(dni: string): string {
+  return `${dni}@herrera-ct.local`;
 }

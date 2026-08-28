@@ -14,7 +14,7 @@ import {
   login,
   changePassword,
   saveSession,
-  getSession,
+  loadSessionUser,
   type SessionUser,
 } from "../lib/auth";
 import { WelcomeSequence } from "./WelcomeSequence";
@@ -41,8 +41,13 @@ export function LoginFlow() {
 
   // Sesión activa → directo al inicio
   useEffect(() => {
-    const s = getSession();
-    if (s && !s.must_change_password) router.replace("/inicio");
+    let cancelled = false;
+    loadSessionUser().then((s) => {
+      if (!cancelled && s && !s.must_change_password) router.replace("/inicio");
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [router]);
 
   async function handleLogin(e: React.FormEvent) {

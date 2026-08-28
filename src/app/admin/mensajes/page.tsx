@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/modules/shared/lib/supabase";
 import { useToast } from "@/modules/shared/components/Toast";
 import { AuthGuard } from "@/modules/auth/components/AuthGuard";
-import { getSession } from "@/modules/auth/lib/auth";
 
 type Lead = {
   id: string;
@@ -29,10 +28,7 @@ function MensajesPageContent() {
   const toast = useToast();
 
   async function load() {
-    const token = getSession()?.session_token;
-    if (!token) return;
     const { data, error } = await supabase.rpc("hct_list_leads", {
-      p_token: token,
       p_unread_only: false,
     });
     if (error) toast.error("No se pudieron cargar los mensajes", error.message);
@@ -44,10 +40,7 @@ function MensajesPageContent() {
   }, []);
 
   async function toggleRead(lead: Lead) {
-    const token = getSession()?.session_token;
-    if (!token) return;
     await supabase.rpc("hct_mark_lead_read", {
-      p_token: token,
       p_lead_id: lead.id,
       p_read: !lead.read,
     });
@@ -55,10 +48,8 @@ function MensajesPageContent() {
   }
 
   async function remove(id: string) {
-    const token = getSession()?.session_token;
-    if (!token) return;
     if (!confirm("¿Eliminar este mensaje definitivamente?")) return;
-    await supabase.rpc("hct_delete_lead", { p_token: token, p_lead_id: id });
+    await supabase.rpc("hct_delete_lead", { p_lead_id: id });
     load();
   }
 

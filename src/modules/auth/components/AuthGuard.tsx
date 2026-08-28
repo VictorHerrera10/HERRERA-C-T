@@ -6,7 +6,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getSession, canAccess, type ModuleKey } from "../lib/auth";
+import { getSession, loadSessionUser, canAccess, type ModuleKey } from "../lib/auth";
 
 export function AuthGuard({
   module,
@@ -24,16 +24,27 @@ export function AuthGuard({
   const [ok, setOk] = useState(false);
 
   useEffect(() => {
-    const user = getSession();
-    if (!user || user.must_change_password) {
-      router.replace("/login");
-      return;
+    let cancelled = false;
+    async function check() {
+      // getSession() ya trae el perfil si login() lo cacheó en esta misma
+      // navegación; si no (recarga de página), se reconstruye desde la
+      // sesión de Supabase Auth persistida.
+      const user = getSession() ?? (await loadSessionUser());
+      if (cancelled) return;
+      if (!user || user.must_change_password) {
+        router.replace("/login");
+        return;
+      }
+      if ((adminOnly && !user.is_admin) || (module && !canAccess(user, module))) {
+        router.replace("/inicio");
+        return;
+      }
+      setOk(true);
     }
-    if ((adminOnly && !user.is_admin) || (module && !canAccess(user, module))) {
-      router.replace("/inicio");
-      return;
-    }
-    setOk(true);
+    check();
+    return () => {
+      cancelled = true;
+    };
   }, [router, module, adminOnly]);
 
   if (!ok) {

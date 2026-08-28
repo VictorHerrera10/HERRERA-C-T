@@ -128,18 +128,23 @@ export function UsersManager() {
     setBusy(true);
     try {
       if (panel === "new") {
-        const { error } = await supabase.rpc("admin_create_user", {
-          p_dni: draft.dni,
-          p_first_name: draft.first_name.trim(),
-          p_last_name: draft.last_name.trim(),
-          p_email: draft.email.trim(),
-          p_phone: draft.phone.trim(),
-          p_is_admin: draft.is_admin,
-          p_area_id: draft.area_id,
-          p_role_id: draft.role_id,
-          p_modules: draft.modules,
+        const res = await fetch("/api/admin/users", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            dni: draft.dni,
+            first_name: draft.first_name.trim(),
+            last_name: draft.last_name.trim(),
+            email: draft.email.trim(),
+            phone: draft.phone.trim(),
+            is_admin: draft.is_admin,
+            area_id: draft.area_id,
+            role_id: draft.role_id,
+            modules: draft.modules,
+          }),
         });
-        if (error) throw new Error(error.message);
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.error ?? "No se pudo crear el usuario");
         toast.success(
           "Usuario creado",
           `Su contraseña inicial es su DNI (${draft.dni}); la cambiará en su primer ingreso.`
@@ -206,11 +211,14 @@ export function UsersManager() {
       )
     )
       return;
-    const { error } = await supabase.rpc("admin_reset_password", {
-      p_user_id: u.id,
+    const res = await fetch("/api/admin/users", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: u.id }),
     });
-    if (error)
-      return toast.error("No se pudo restablecer la contraseña", error.message);
+    const json = await res.json();
+    if (!res.ok)
+      return toast.error("No se pudo restablecer la contraseña", json.error);
     toast.success(
       "Contraseña restablecida",
       `${u.first_name} ingresará con su DNI y deberá crear una nueva.`

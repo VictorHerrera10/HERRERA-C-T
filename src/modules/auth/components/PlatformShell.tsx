@@ -250,8 +250,8 @@ export function PlatformShell({ children }: { children: React.ReactNode }) {
       <SessionCurtain
         mode="out"
         name={user.first_name || user.dni}
-        onDone={() => {
-          clearSession();
+        onDone={async () => {
+          await clearSession();
           router.replace("/login");
         }}
       />

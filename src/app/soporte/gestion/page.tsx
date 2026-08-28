@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from "motion/react";
 import { supabase } from "@/modules/shared/lib/supabase";
 import { useToast } from "@/modules/shared/components/Toast";
 import { AuthGuard } from "@/modules/auth/components/AuthGuard";
-import { getSession } from "@/modules/auth/lib/auth";
 import {
   type Ticket,
   type TicketStatus,
@@ -61,10 +60,7 @@ function TicketsPageContent() {
   const [saving, setSaving] = useState(false);
 
   async function load() {
-    const token = getSession()?.session_token;
-    if (!token) return;
     const { data, error } = await supabase.rpc("hct_list_tickets", {
-      p_token: token,
       p_status: null,
     });
     if (error)
@@ -120,11 +116,8 @@ function TicketsPageContent() {
 
   async function createTicket() {
     if (!draft.title.trim()) return;
-    const token = getSession()?.session_token;
-    if (!token) return;
     setSaving(true);
     const { data, error } = await supabase.rpc("hct_create_ticket", {
-      p_token: token,
       p_title: draft.title,
       p_description: draft.description,
       p_client_name: draft.client_name,
