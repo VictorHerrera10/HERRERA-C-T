@@ -7,8 +7,9 @@
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { supabase } from "@/modules/shared/lib/supabase";
+import { Icon } from "@/modules/shared/components/Icon";
 import { useToast } from "@/modules/shared/components/Toast";
-import type { Area, AreaRole } from "../lib/auth";
+import { MODULES, type Area, type AreaRole, type ModuleKey } from "../lib/auth";
 
 export function AreasManager() {
   const toast = useToast();
@@ -23,21 +24,21 @@ export function AreasManager() {
     const [a, r, u] = await Promise.all([
       supabase.from("areas").select("*").order("name"),
       supabase.from("area_roles").select("*").order("name"),
-      supabase.from("app_users").select("role_id"),
+      supabase.rpc("hct_role_user_counts"),
     ]);
     const err = a.error ?? r.error ?? u.error;
     if (err) {
       setLoadFailed(true);
       return toast.error(
         "No se pudieron cargar las áreas",
-        `${err.message} — ¿Ejecutaste migration-usuarios.sql?`
+        `${err.message} — ¿Ejecutaste migration-areas-role-counts.sql?`
       );
     }
     setAreas((a.data as Area[]) ?? []);
     setRoles((r.data as AreaRole[]) ?? []);
     const map = new Map<string, number>();
-    for (const row of (u.data as { role_id: string | null }[]) ?? [])
-      if (row.role_id) map.set(row.role_id, (map.get(row.role_id) ?? 0) + 1);
+    for (const row of (u.data as { role_id: string; total: number }[]) ?? [])
+      map.set(row.role_id, row.total);
     setCounts(map);
   }
 
@@ -82,6 +83,24 @@ export function AreasManager() {
     if (error) return toast.error("No se pudo eliminar el rol", error.message);
     toast.info(`Rol "${role.name}" eliminado`);
     load();
+  }
+
+  async function toggleAreaModule(area: Area, key: ModuleKey) {
+    const modules = area.default_modules.includes(key)
+      ? area.default_modules.filter((m) => m !== key)
+      : [...area.default_modules, key];
+    // Optimista: refleja el cambio ya mismo, sin esperar la vuelta del server.
+    setAreas((prev) =>
+      prev.map((a) => (a.id === area.id ? { ...a, default_modules: modules } : a))
+    );
+    const { error } = await supabase.rpc("hct_set_area_modules", {
+      p_area_id: area.id,
+      p_modules: modules,
+    });
+    if (error) {
+      toast.error("No se pudo actualizar el acceso del área", error.message);
+      load();
+    }
   }
 
   async function removeArea(area: Area) {
@@ -143,7 +162,36 @@ export function AreasManager() {
                 </button>
               </div>
 
-              <div className="mt-4 space-y-2">
+              {/* Acceso a módulos heredado por todos los miembros del área */}
+              <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.2em] text-fog">
+                Acceso a módulos del área
+              </p>
+              <div className="mt-2.5 flex flex-wrap gap-2">
+                {MODULES.map((m) => {
+                  const on = area.default_modules.includes(m.key);
+                  return (
+                    <button
+                      key={m.key}
+                      type="button"
+                      onClick={() => toggleAreaModule(area, m.key)}
+                      className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11px] transition-colors ${
+                        on
+                          ? "border-crimson/50 bg-crimson/10 text-snow"
+                          : "border-edge bg-steel/60 text-fog hover:border-snow/25"
+                      }`}
+                    >
+                      <Icon name={m.icon} className={`h-3 w-3 ${m.accent}`} />
+                      {m.label}
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="mt-2 text-[11px] text-ash">
+                Todos los del área acceden a estos módulos automáticamente;
+                puedes sumar acceso extra por persona en Usuarios.
+              </p>
+
+              <div className="mt-5 space-y-2">
                 {areaRoles.map((r) => (
                   <div
                     key={r.id}

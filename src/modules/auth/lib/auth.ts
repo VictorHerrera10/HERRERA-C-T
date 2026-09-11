@@ -2,7 +2,7 @@
 
 import { supabase } from "@/modules/shared/lib/supabase";
 
-export type ModuleKey = "website" | "helpdesk" | "quotes" | "ventas";
+export type ModuleKey = "website" | "helpdesk" | "quotes" | "ventas" | "projects" | "finanzas";
 
 export type ModuleDef = {
   key: ModuleKey;
@@ -48,6 +48,22 @@ export const MODULES: ModuleDef[] = [
     icon: "rocket",
     accent: "text-gold",
   },
+  {
+    key: "projects",
+    label: "Proyectos",
+    description: "Ejecución de proyectos: requisitos, desarrollo y conformidades.",
+    href: "/proyectos/gestion",
+    icon: "wrench",
+    accent: "text-indigo-500",
+  },
+  {
+    key: "finanzas",
+    label: "Finanzas",
+    description: "Ingresos registrados por cada proyecto cerrado.",
+    href: "/finanzas/gestion",
+    icon: "banknote",
+    accent: "text-teal-600",
+  },
 ];
 
 export type SessionUser = {
@@ -64,6 +80,9 @@ export type SessionUser = {
   area_name: string | null;
   role_name: string | null;
   modules: ModuleKey[];
+  /* Agregado por supabase/migration-areas-modulos.sql: unión de modules
+     propios + default_modules del área. Es lo que debe usar canAccess(). */
+  effective_modules?: ModuleKey[];
   must_change_password: boolean;
   active: boolean;
   /* Agregado por supabase/migration-mobile.sql: token de sesión server-side
@@ -73,7 +92,7 @@ export type SessionUser = {
   session_token?: string;
 };
 
-export type Area = { id: string; name: string };
+export type Area = { id: string; name: string; default_modules: ModuleKey[] };
 export type AreaRole = { id: string; area_id: string; name: string };
 
 export type AppUser = SessionUser & {
@@ -125,7 +144,10 @@ export async function loadSessionUser(): Promise<SessionUser | null> {
 }
 
 export function canAccess(user: SessionUser, module: ModuleKey): boolean {
-  return user.is_admin || user.modules.includes(module);
+  return (
+    user.is_admin ||
+    (user.effective_modules ?? user.modules).includes(module)
+  );
 }
 
 export function displayName(user: SessionUser): string {

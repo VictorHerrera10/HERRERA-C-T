@@ -7,6 +7,8 @@ export type QuoteStatus =
   | "rechazada"
   | "vencida";
 
+export type ApprovalStatus = "pendiente" | "aprobada" | "rechazada";
+
 export type Quote = {
   id: string;
   quote_no: number;
@@ -22,6 +24,33 @@ export type Quote = {
   decided_at: string | null;
   created_at: string;
   updated_at: string;
+  /* Aprobación interna (distinta de la decisión del cliente arriba) */
+  created_by: string | null;
+  approver_id: string | null;
+  approval_status: ApprovalStatus | null;
+  approval_note: string;
+  approved_at: string | null;
+  /* Datos ampliados de proyecto/cliente/plazo (Fase 1) */
+  project_summary: string;
+  client_company: string;
+  client_phone: string;
+  terms: string;
+  estimated_duration_text: string;
+  estimated_delivery_date: string | null;
+  client_accepted_duration: boolean;
+  /* Origen y responsable — preparación del Portal de Cliente (Fase 5) */
+  origin: "consultor" | "cliente";
+  assigned_to: string | null;
+  /* Conformidad del encargado tras aprobación del cliente (Fase 2) */
+  manager_confirmed_at?: string | null;
+  manager_confirmation_note?: string;
+};
+
+export type QuoteTermTemplate = {
+  id: string;
+  name: string;
+  body: string;
+  created_at: string;
 };
 
 export type QuoteItem = {
@@ -45,8 +74,8 @@ export const QUOTE_STATUS: Record<
 > = {
   borrador: {
     label: "Borrador",
-    badge: "bg-ink/8 text-ink-soft",
-    dot: "bg-ink-faint",
+    badge: "bg-steel text-fog",
+    dot: "bg-ash",
   },
   enviada: {
     label: "Enviada",
@@ -60,13 +89,34 @@ export const QUOTE_STATUS: Record<
   },
   rechazada: {
     label: "Rechazada",
-    badge: "bg-burgundy/10 text-burgundy",
-    dot: "bg-burgundy",
+    badge: "bg-crimson/10 text-[#ff8195]",
+    dot: "bg-crimson",
   },
   vencida: {
     label: "Vencida",
-    badge: "bg-gold/15 text-[#8a6a14]",
+    badge: "bg-gold/15 text-gold-soft",
     dot: "bg-gold",
+  },
+};
+
+export const APPROVAL_STATUS: Record<
+  ApprovalStatus,
+  { label: string; badge: string; dot: string }
+> = {
+  pendiente: {
+    label: "En aprobación",
+    badge: "bg-gold/15 text-gold-soft",
+    dot: "bg-gold",
+  },
+  aprobada: {
+    label: "Aprobada internamente",
+    badge: "bg-esmeralda/10 text-esmeralda",
+    dot: "bg-esmeralda",
+  },
+  rechazada: {
+    label: "Rechazada internamente",
+    badge: "bg-crimson/10 text-[#ff8195]",
+    dot: "bg-crimson",
   },
 };
 

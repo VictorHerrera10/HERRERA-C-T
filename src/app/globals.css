@@ -368,6 +368,20 @@ body {
   color: var(--color-ash);
 }
 
+/* El popup nativo de <option> de un <select> sigue el color-scheme del
+   sistema operativo, no el background/color en CSS del elemento — en
+   Windows con tema claro del SO, Chrome pinta la lista desplegada en
+   blanco/negro pase lo que pase en el <select>. `color-scheme: dark`
+   le indica al navegador que pinte también el popup nativo en su
+   variante oscura, que es lo que realmente resuelve el contraste aquí. */
+main select {
+  color-scheme: dark;
+}
+select.field-dark option {
+  background-color: var(--color-carbon);
+  color: var(--color-snow);
+}
+
 /* ── Scrollbar ──────────────────────────────────────────── */
 ::-webkit-scrollbar {
   width: 10px;

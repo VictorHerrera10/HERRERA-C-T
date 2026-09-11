@@ -11,6 +11,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import { Icon } from "@/modules/shared/components/Icon";
+import { Avatar } from "@/modules/shared/components/Avatar";
 import { PageTransition } from "@/modules/shared/components/PageTransition";
 import {
   getSession,
@@ -40,7 +41,10 @@ function buildSections(user: SessionUser): NavSection[] {
       items: [
         { href: "/inicio", label: "Inicio", icon: "home" },
         ...(user.is_admin
-          ? [{ href: "/usuarios", label: "Usuarios", icon: "shield", accent: "text-gold" }]
+          ? [
+              { href: "/usuarios", label: "Usuarios", icon: "shield", accent: "text-gold" },
+              { href: "/usuarios/areas", label: "Áreas", icon: "building", accent: "text-gold" },
+            ]
           : []),
       ],
     },
@@ -125,10 +129,9 @@ function SidebarContent({
             <div className="space-y-1">
               {sec.items.map((it) => {
                 const active =
-                  !it.external &&
-                  (it.href === "/inicio"
+                  it.href === "/inicio"
                     ? pathname === it.href
-                    : pathname.startsWith(it.href));
+                    : pathname.startsWith(it.href);
                 return (
                   <motion.div key={it.href} variants={itemAnim}>
                     <Link
@@ -191,15 +194,12 @@ function SidebarContent({
           onClick={onNavigate}
           className="group flex items-center gap-3 rounded-xl px-2.5 py-2.5 transition-colors hover:bg-snow/5"
         >
-          <span className="relative block h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-edge bg-steel">
-            {user.avatar_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={user.avatar_url} alt="" className="h-full w-full object-cover" />
-            ) : (
-              <span className="flex h-full w-full items-center justify-center font-display text-xs font-bold text-crimson-bright">
-                {(user.first_name[0] ?? "") + (user.last_name[0] ?? "")}
-              </span>
-            )}
+          <span className="relative block shrink-0">
+            <Avatar
+              src={user.avatar_url}
+              seed={`${user.first_name} ${user.last_name}` || user.dni}
+              size="sm"
+            />
             <span className="absolute -right-0.5 -bottom-0.5 h-2.5 w-2.5 rounded-full border-2 border-carbon bg-esmeralda" />
           </span>
           <span className="min-w-0">
@@ -229,7 +229,19 @@ function SidebarContent({
   );
 }
 
-export function PlatformShell({ children }: { children: React.ReactNode }) {
+const MAX_WIDTH_CLASS = {
+  "4xl": "max-w-4xl",
+  "5xl": "max-w-5xl",
+  "7xl": "max-w-7xl",
+} as const;
+
+export function PlatformShell({
+  children,
+  maxWidth = "5xl",
+}: {
+  children: React.ReactNode;
+  maxWidth?: keyof typeof MAX_WIDTH_CLASS;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const [user, setUser] = useState<SessionUser | null>(null);
@@ -330,7 +342,7 @@ export function PlatformShell({ children }: { children: React.ReactNode }) {
 
       {/* ── Contenido ── */}
       <main className="relative z-10 min-w-0 flex-1 px-4 pb-8 pt-16 sm:px-5 sm:pb-12 sm:pt-20 lg:px-10 lg:pt-10">
-        <div className="mx-auto w-full max-w-5xl">
+        <div className={`mx-auto w-full ${MAX_WIDTH_CLASS[maxWidth]}`}>
           <PageTransition>{children}</PageTransition>
         </div>
       </main>

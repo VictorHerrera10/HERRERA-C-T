@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { supabase } from "@/modules/shared/lib/supabase";
 import { Icon } from "@/modules/shared/components/Icon";
+import { Avatar } from "@/modules/shared/components/Avatar";
 import { useToast } from "@/modules/shared/components/Toast";
 import {
   getSession,
@@ -63,10 +64,12 @@ export function ProfileView() {
       email: email.trim(),
       phone: phone.trim(),
     };
-    const { error } = await supabase
-      .from("app_users")
-      .update({ ...patch, updated_at: new Date().toISOString() })
-      .eq("id", user!.id);
+    const { error } = await supabase.rpc("hct_update_my_profile", {
+      p_first_name: patch.first_name,
+      p_last_name: patch.last_name,
+      p_email: patch.email,
+      p_phone: patch.phone,
+    });
     setSaving(false);
     if (error) return toast.error("No se pudo guardar el perfil", error.message);
     applySession(patch);
@@ -87,10 +90,9 @@ export function ProfileView() {
       );
     }
     const url = supabase.storage.from("users").getPublicUrl(path).data.publicUrl;
-    const { error: e2 } = await supabase
-      .from("app_users")
-      .update({ avatar_url: url, updated_at: new Date().toISOString() })
-      .eq("id", user!.id);
+    const { error: e2 } = await supabase.rpc("hct_update_my_avatar", {
+      p_avatar_url: url,
+    });
     setUploading(false);
     if (e2) return toast.error("No se pudo guardar la foto", e2.message);
     applySession({ avatar_url: url });
@@ -149,18 +151,15 @@ export function ProfileView() {
         <div className="flex flex-wrap items-center gap-6">
           <button
             onClick={() => fileRef.current?.click()}
-            className="group relative h-24 w-24 shrink-0 overflow-hidden rounded-2xl border border-edge bg-steel"
+            className="group relative shrink-0"
             title="Cambiar foto"
           >
-            {user.avatar_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={user.avatar_url} alt="" className="h-full w-full object-cover" />
-            ) : (
-              <span className="flex h-full w-full items-center justify-center font-display text-2xl font-bold text-crimson-bright">
-                {(user.first_name[0] ?? "") + (user.last_name[0] ?? "")}
-              </span>
-            )}
-            <span className="absolute inset-0 flex items-center justify-center bg-void/70 text-[10px] font-semibold uppercase tracking-wider text-snow opacity-0 transition-opacity group-hover:opacity-100">
+            <Avatar
+              src={user.avatar_url}
+              seed={`${user.first_name} ${user.last_name}` || user.dni}
+              size="xl"
+            />
+            <span className="absolute inset-0 flex items-center justify-center rounded-2xl bg-void/70 text-[10px] font-semibold uppercase tracking-wider text-snow opacity-0 transition-opacity group-hover:opacity-100">
               {uploading ? "Subiendo…" : "Cambiar"}
             </span>
           </button>

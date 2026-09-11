@@ -8,10 +8,10 @@ export function Field({
 }: { label: string } & React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">
+      <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.12em] text-fog">
         {label}
       </span>
-      <input className="field" {...props} />
+      <input className="field-dark" {...props} />
     </label>
   );
 }
@@ -22,10 +22,10 @@ export function TextArea({
 }: { label: string } & React.TextareaHTMLAttributes<HTMLTextAreaElement>) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">
+      <span className="mb-1.5 block text-xs font-semibold uppercase tracking-[0.12em] text-fog">
         {label}
       </span>
-      <textarea className="field resize-y" {...props} />
+      <textarea className="field-dark resize-y" {...props} />
     </label>
   );
 }
@@ -44,7 +44,7 @@ export function SaveButton({
       <button
         type="submit"
         disabled={state === "saving"}
-        className="rounded-lg bg-burgundy px-5 py-2.5 text-sm font-semibold text-ivory transition-all hover:-translate-y-0.5 hover:bg-burgundy-bright disabled:opacity-60"
+        className="rounded-lg bg-crimson px-5 py-2.5 text-sm font-semibold text-snow transition-all hover:-translate-y-0.5 hover:bg-crimson-bright disabled:opacity-60"
       >
         {state === "saving" ? "Guardando…" : children}
       </button>
@@ -62,10 +62,10 @@ export function SectionCard({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-lg border border-ink/8 bg-white p-6 shadow-[0_2px_12px_rgba(30,33,37,0.04)] lg:p-8">
-      <h2 className="font-display text-xl font-medium text-ink">{title}</h2>
+    <section className="rounded-lg border border-edge bg-carbon/70 p-6 lg:p-8">
+      <h2 className="font-display text-xl font-medium text-snow">{title}</h2>
       {description && (
-        <p className="mt-1 text-sm text-ink-faint">{description}</p>
+        <p className="mt-1 text-sm text-fog">{description}</p>
       )}
       <div className="mt-6">{children}</div>
     </section>

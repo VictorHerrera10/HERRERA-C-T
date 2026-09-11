@@ -89,7 +89,7 @@ export const ORDER_STATUS: Record<
   },
   revisando: {
     label: "En revisión",
-    badge: "bg-gold/15 text-gold",
+    badge: "bg-gold/15 text-gold-soft",
     dot: "bg-gold",
     next: "confirmada",
   },
@@ -101,14 +101,14 @@ export const ORDER_STATUS: Record<
   },
   entregada: {
     label: "Entregada",
-    badge: "bg-ink/8 text-ink-soft",
-    dot: "bg-ink-faint",
+    badge: "bg-steel text-fog",
+    dot: "bg-ash",
     next: null,
   },
   cancelada: {
     label: "Cancelada",
-    badge: "bg-burgundy/10 text-burgundy",
-    dot: "bg-burgundy",
+    badge: "bg-crimson/10 text-[#ff8195]",
+    dot: "bg-crimson",
     next: null,
   },
 };

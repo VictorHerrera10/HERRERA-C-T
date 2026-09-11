@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabase } from "@/modules/shared/lib/supabase";
 import { supabaseAdmin, authEmailForDni } from "@/modules/auth/lib/supabase-admin";
 
 /* Crea un trabajador: usuario de Supabase Auth (email sintético
@@ -39,7 +38,7 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const { data, error } = await supabase.rpc("admin_create_user", {
+  const { data, error } = await supabaseAdmin.rpc("admin_create_user", {
     p_dni: dni,
     p_first_name: (first_name as string).trim(),
     p_last_name: typeof last_name === "string" ? last_name.trim() : "",
@@ -58,7 +57,7 @@ export async function POST(req: NextRequest) {
   }
 
   const created = data as { id: string };
-  const { error: linkError } = await supabase
+  const { error: linkError } = await supabaseAdmin
     .from("app_users")
     .update({ auth_user_id: authUser.user.id })
     .eq("id", created.id);
@@ -84,7 +83,7 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: "user_id requerido" }, { status: 400 });
   }
 
-  const { data: user, error: fetchError } = await supabase
+  const { data: user, error: fetchError } = await supabaseAdmin
     .from("app_users")
     .select("dni, auth_user_id")
     .eq("id", user_id)
@@ -102,7 +101,7 @@ export async function PATCH(req: NextRequest) {
     }
   }
 
-  const { error: updateError } = await supabase
+  const { error: updateError } = await supabaseAdmin
     .from("app_users")
     .update({ must_change_password: true, updated_at: new Date().toISOString() })
     .eq("id", user_id);

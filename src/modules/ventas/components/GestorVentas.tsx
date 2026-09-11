@@ -6,6 +6,9 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "motion/react";
 import { supabase } from "@/modules/shared/lib/supabase";
 import { useToast } from "@/modules/shared/components/Toast";
+import { StatCard } from "@/modules/shared/components/StatCard";
+import { EmptyState } from "@/modules/shared/components/EmptyState";
+import { Select } from "@/modules/shared/components/Select";
 import {
   type Product,
   type ProductCategory,
@@ -97,8 +100,8 @@ function ProductoPanel({
     onClose();
   }
 
-  const fieldCls = "w-full rounded-lg border border-ink/12 bg-ivory px-3.5 py-2.5 text-sm text-ink outline-none transition-colors focus:border-burgundy/50";
-  const labelCls = "mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-faint";
+  const fieldCls = "w-full rounded-lg border border-edge bg-carbon/70 px-3.5 py-2.5 text-sm text-snow outline-none transition-colors focus:border-crimson/50";
+  const labelCls = "mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.14em] text-fog";
 
   return (
     <motion.div
@@ -106,7 +109,7 @@ function ProductoPanel({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 flex justify-end"
-      style={{ background: "rgba(30,33,37,0.45)", backdropFilter: "blur(4px)" }}
+      style={{ background: "rgba(5,5,7,0.7)", backdropFilter: "blur(4px)" }}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <motion.div
@@ -114,16 +117,16 @@ function ProductoPanel({
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="flex h-full w-full max-w-md flex-col overflow-y-auto bg-white shadow-[−16px_0_48px_rgba(30,33,37,0.12)]"
+        className="flex h-full w-full max-w-md flex-col overflow-y-auto bg-carbon shadow-[−16px_0_48px_rgba(30,33,37,0.12)]"
       >
         {/* Header panel */}
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-ink/8 bg-white px-6 py-4">
-          <h2 className="font-display text-lg font-semibold text-ink">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-edge bg-carbon px-6 py-4">
+          <h2 className="font-display text-lg font-semibold text-snow">
             {isNew ? "Nuevo producto" : "Editar producto"}
           </h2>
           <button
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-faint transition-colors hover:bg-ink/5 hover:text-ink"
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-fog transition-colors hover:bg-steel hover:text-snow"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="h-4 w-4">
               <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
@@ -137,21 +140,21 @@ function ProductoPanel({
             <label className={labelCls}>Imagen del producto</label>
             <div
               onClick={() => fileRef.current?.click()}
-              className="relative flex h-40 cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-ink/15 bg-cream/50 transition-colors hover:border-burgundy/40"
+              className="relative flex h-40 cursor-pointer items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-edge bg-steel/50 transition-colors hover:border-crimson/40"
             >
               {form.image_url ? (
                 <Image src={form.image_url} alt="" fill className="object-cover" />
               ) : (
                 <div className="text-center">
                   <p className="text-3xl">📷</p>
-                  <p className="mt-1 text-xs text-ink-faint">
+                  <p className="mt-1 text-xs text-fog">
                     {uploading ? "Subiendo…" : "Clic para subir imagen"}
                   </p>
                 </div>
               )}
               {uploading && (
-                <div className="absolute inset-0 flex items-center justify-center bg-white/80">
-                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-burgundy border-t-transparent" />
+                <div className="absolute inset-0 flex items-center justify-center bg-void/80">
+                  <div className="h-6 w-6 animate-spin rounded-full border-2 border-crimson border-t-transparent" />
                 </div>
               )}
             </div>
@@ -173,12 +176,14 @@ function ProductoPanel({
           {/* Categoría */}
           <div>
             <label className={labelCls}>Categoría *</label>
-            <select value={form.category_id} onChange={(e) => setForm({ ...form, category_id: e.target.value })} className={fieldCls}>
-              {categories.map((c) => {
+            <Select
+              value={form.category_id}
+              onChange={(v) => setForm({ ...form, category_id: v })}
+              options={categories.map((c) => {
                 const info = CATEGORY_LABELS[c.slug as CategorySlug];
-                return <option key={c.id} value={c.id}>{info?.emoji} {info?.label ?? c.name}</option>;
+                return { value: c.id, label: `${info?.emoji ?? ""} ${info?.label ?? c.name}`.trim() };
               })}
-            </select>
+            />
           </div>
 
           {/* Precio y moneda */}
@@ -189,9 +194,11 @@ function ProductoPanel({
             </div>
             <div>
               <label className={labelCls}>Moneda</label>
-              <select value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })} className={fieldCls}>
-                {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
-              </select>
+              <Select
+                value={form.currency}
+                onChange={(v) => setForm({ ...form, currency: v })}
+                options={CURRENCIES.map((c) => ({ value: c, label: c }))}
+              />
             </div>
           </div>
 
@@ -214,34 +221,34 @@ function ProductoPanel({
           </div>
 
           {/* Publicado */}
-          <div className="flex items-center justify-between rounded-lg border border-ink/8 bg-cream/50 px-4 py-3">
+          <div className="flex items-center justify-between rounded-lg border border-edge bg-steel/50 px-4 py-3">
             <div>
-              <p className="text-sm font-semibold text-ink">Publicado</p>
-              <p className="text-xs text-ink-faint">Visible en el catálogo público</p>
+              <p className="text-sm font-semibold text-snow">Publicado</p>
+              <p className="text-xs text-fog">Visible en el catálogo público</p>
             </div>
             <button
               onClick={() => setForm({ ...form, published: !form.published })}
-              className={`relative h-6 w-11 rounded-full transition-colors ${form.published ? "bg-esmeralda" : "bg-ink/20"}`}
+              className={`relative h-6 w-11 rounded-full transition-colors ${form.published ? "bg-esmeralda" : "bg-edge"}`}
             >
               <motion.span
                 animate={{ x: form.published ? 20 : 2 }}
                 transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                className="absolute top-1 h-4 w-4 rounded-full bg-white shadow"
+                className="absolute top-1 h-4 w-4 rounded-full bg-carbon shadow"
               />
             </button>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 flex gap-3 border-t border-ink/8 bg-white px-6 py-4">
-          <button onClick={onClose} className="flex-1 rounded-lg border border-ink/12 py-2.5 text-sm font-semibold text-ink-soft transition-colors hover:border-ink/25 hover:text-ink">
+        <div className="sticky bottom-0 flex gap-3 border-t border-edge bg-carbon px-6 py-4">
+          <button onClick={onClose} className="flex-1 rounded-lg border border-edge py-2.5 text-sm font-semibold text-fog transition-colors hover:border-snow/25 hover:text-snow">
             Cancelar
           </button>
           <motion.button
             whileTap={{ scale: 0.97 }}
             onClick={save}
             disabled={saving}
-            className="flex-1 rounded-lg bg-burgundy py-2.5 text-sm font-semibold text-ivory shadow-[0_4px_16px_rgba(138,22,38,0.3)] transition-colors hover:bg-burgundy-bright disabled:opacity-60"
+            className="flex-1 rounded-lg bg-crimson py-2.5 text-sm font-semibold text-snow shadow-[0_4px_16px_rgba(138,22,38,0.3)] transition-colors hover:bg-crimson-bright disabled:opacity-60"
           >
             {saving ? "Guardando…" : isNew ? "Crear producto" : "Guardar cambios"}
           </motion.button>
@@ -289,7 +296,7 @@ function OrdenPanel({
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-50 flex justify-end"
-      style={{ background: "rgba(30,33,37,0.45)", backdropFilter: "blur(4px)" }}
+      style={{ background: "rgba(5,5,7,0.7)", backdropFilter: "blur(4px)" }}
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <motion.div
@@ -297,15 +304,15 @@ function OrdenPanel({
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
-        className="flex h-full w-full max-w-md flex-col overflow-y-auto bg-white"
+        className="flex h-full w-full max-w-md flex-col overflow-y-auto bg-carbon"
       >
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-ink/8 bg-white px-6 py-4">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-edge bg-carbon px-6 py-4">
           <div>
-            <p className="font-mono text-xs text-ink-faint">{orderCode(order.order_no)}</p>
-            <h2 className="font-display text-lg font-semibold text-ink">{order.client_name}</h2>
+            <p className="font-mono text-xs text-fog">{orderCode(order.order_no)}</p>
+            <h2 className="font-display text-lg font-semibold text-snow">{order.client_name}</h2>
           </div>
-          <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-faint hover:bg-ink/5 hover:text-ink">
+          <button onClick={onClose} className="flex h-8 w-8 items-center justify-center rounded-lg text-fog hover:bg-steel hover:text-snow">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="h-4 w-4">
               <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
             </svg>
@@ -315,7 +322,7 @@ function OrdenPanel({
         <div className="flex-1 space-y-6 px-6 py-6">
           {/* Estado actual */}
           <div>
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-faint">Estado</p>
+            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-fog">Estado</p>
             <span className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold ${st.badge}`}>
               <span className={`h-1.5 w-1.5 rounded-full ${st.dot}`} />
               {st.label}
@@ -323,41 +330,41 @@ function OrdenPanel({
           </div>
 
           {/* Cliente */}
-          <div className="rounded-xl border border-ink/8 bg-cream/50 p-4 space-y-2">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-faint">Datos del cliente</p>
-            <p className="text-sm font-semibold text-ink">{order.client_name}</p>
-            <p className="text-sm text-ink-soft">{order.client_email}</p>
-            {order.client_phone && <p className="text-sm text-ink-soft">{order.client_phone}</p>}
+          <div className="rounded-xl border border-edge bg-steel/50 p-4 space-y-2">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-fog">Datos del cliente</p>
+            <p className="text-sm font-semibold text-snow">{order.client_name}</p>
+            <p className="text-sm text-fog">{order.client_email}</p>
+            {order.client_phone && <p className="text-sm text-fog">{order.client_phone}</p>}
             {order.notes && (
-              <div className="mt-3 border-t border-ink/8 pt-3">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-faint">Notas</p>
-                <p className="mt-1 text-sm text-ink-soft">{order.notes}</p>
+              <div className="mt-3 border-t border-edge pt-3">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-fog">Notas</p>
+                <p className="mt-1 text-sm text-fog">{order.notes}</p>
               </div>
             )}
           </div>
 
           {/* Productos */}
           <div>
-            <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-faint">Productos solicitados</p>
+            <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-fog">Productos solicitados</p>
             <div className="space-y-2">
               {orderItems.map((item) => (
-                <div key={item.id} className="flex items-center justify-between rounded-lg border border-ink/8 bg-white p-3.5">
+                <div key={item.id} className="flex items-center justify-between rounded-lg border border-edge bg-carbon/70 p-3.5">
                   <div>
-                    <p className="text-sm font-semibold text-ink">{item.product_name}</p>
-                    <p className="text-xs text-ink-faint">Cant. {item.qty} × {money(item.unit_price)}</p>
+                    <p className="text-sm font-semibold text-snow">{item.product_name}</p>
+                    <p className="text-xs text-fog">Cant. {item.qty} × {money(item.unit_price)}</p>
                   </div>
-                  <p className="font-display text-sm font-semibold text-ink">{money(item.unit_price * item.qty)}</p>
+                  <p className="font-display text-sm font-semibold text-snow">{money(item.unit_price * item.qty)}</p>
                 </div>
               ))}
             </div>
-            <div className="mt-3 flex justify-between rounded-lg bg-cream px-4 py-3">
-              <span className="text-sm font-semibold text-ink">Total</span>
-              <span className="font-display text-base font-bold text-burgundy">{money(order.total)}</span>
+            <div className="mt-3 flex justify-between rounded-lg bg-steel px-4 py-3">
+              <span className="text-sm font-semibold text-snow">Total</span>
+              <span className="font-display text-base font-bold text-[#ff8195]">{money(order.total)}</span>
             </div>
           </div>
 
           {/* Fecha */}
-          <p className="text-xs text-ink-faint">
+          <p className="text-xs text-fog">
             Recibida el{" "}
             {new Date(order.created_at).toLocaleDateString("es", {
               day: "numeric", month: "long", year: "numeric",
@@ -367,14 +374,14 @@ function OrdenPanel({
           {/* Cambios de estado */}
           {order.status !== "entregada" && order.status !== "cancelada" && (
             <div>
-              <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-faint">Avanzar estado</p>
+              <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-fog">Avanzar estado</p>
               <div className="flex flex-wrap gap-2">
                 {st.next && (
                   <motion.button
                     whileTap={{ scale: 0.97 }}
                     onClick={() => changeStatus(st.next!)}
                     disabled={updating}
-                    className="rounded-lg bg-burgundy px-4 py-2 text-sm font-semibold text-ivory shadow-[0_2px_12px_rgba(138,22,38,0.25)] hover:bg-burgundy-bright disabled:opacity-60"
+                    className="rounded-lg bg-crimson px-4 py-2 text-sm font-semibold text-snow shadow-[0_2px_12px_rgba(138,22,38,0.25)] hover:bg-crimson-bright disabled:opacity-60"
                   >
                     {updating ? "…" : `Marcar como ${ORDER_STATUS[st.next].label} →`}
                   </motion.button>
@@ -382,7 +389,7 @@ function OrdenPanel({
                 <button
                   onClick={() => changeStatus("cancelada")}
                   disabled={updating}
-                  className="rounded-lg border border-burgundy/30 px-4 py-2 text-sm font-semibold text-burgundy hover:bg-burgundy/5 disabled:opacity-60"
+                  className="rounded-lg border border-crimson/30 px-4 py-2 text-sm font-semibold text-[#ff8195] hover:bg-crimson/10 disabled:opacity-60"
                 >
                   Cancelar orden
                 </button>
@@ -489,9 +496,9 @@ export function GestorVentas() {
   }
 
   const tabCls = (t: Tab) =>
-    `relative px-5 py-2.5 text-sm font-semibold transition-colors ${tab === t ? "text-ink" : "text-ink-faint hover:text-ink"}`;
+    `relative px-5 py-2.5 text-sm font-semibold transition-colors ${tab === t ? "text-snow" : "text-fog hover:text-snow"}`;
   const filterPillCls = (active: boolean) =>
-    `relative rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors ${active ? "text-ivory" : "text-ink-soft hover:bg-ink/5 hover:text-ink"}`;
+    `relative rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors ${active ? "text-snow" : "text-fog hover:bg-steel hover:text-snow"}`;
 
   return (
     <div>
@@ -503,8 +510,8 @@ export function GestorVentas() {
         className="flex items-center justify-between gap-4"
       >
         <div>
-          <h1 className="font-display text-3xl font-medium text-ink">Ventas</h1>
-          <p className="mt-1 text-sm text-ink-faint">
+          <h1 className="font-display text-3xl font-medium text-snow">Ventas</h1>
+          <p className="mt-1 text-sm text-fog">
             Catálogo de productos y órdenes de clientes.
           </p>
         </div>
@@ -513,7 +520,7 @@ export function GestorVentas() {
             whileHover={{ y: -2 }}
             whileTap={{ scale: 0.97 }}
             onClick={() => setEditProduct("new")}
-            className="rounded-lg bg-burgundy px-4 py-2.5 text-sm font-semibold text-ivory shadow-[0_4px_16px_rgba(138,22,38,0.3)] transition-colors hover:bg-burgundy-bright"
+            className="rounded-lg bg-crimson px-4 py-2.5 text-sm font-semibold text-snow shadow-[0_4px_16px_rgba(138,22,38,0.3)] transition-colors hover:bg-crimson-bright"
           >
             + Nuevo producto
           </motion.button>
@@ -521,42 +528,32 @@ export function GestorVentas() {
       </motion.div>
 
       {/* Stats rápidas */}
-      <motion.div
-        initial="hidden"
-        animate="show"
-        variants={{ show: { transition: { staggerChildren: 0.07, delayChildren: 0.1 } } }}
-        className="mt-7 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4"
-      >
+      <div className="mt-7 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
         {[
-          { label: "Productos", value: stats.total, accent: "text-ink" },
+          { label: "Productos", value: stats.total, accent: "text-snow" },
           { label: "Publicados", value: stats.publicados, accent: "text-esmeralda" },
-          { label: "Sin stock", value: stats.sinStock, accent: stats.sinStock > 0 ? "text-burgundy" : "text-ink-soft" },
-          { label: "Órdenes nuevas", value: stats.nuevasOrdenes, accent: stats.nuevasOrdenes > 0 ? "text-azul" : "text-ink-soft" },
-        ].map((c) => (
-          <motion.div
+          { label: "Sin stock", value: stats.sinStock, accent: stats.sinStock > 0 ? "text-[#ff8195]" : "text-fog" },
+          { label: "Órdenes nuevas", value: stats.nuevasOrdenes, accent: stats.nuevasOrdenes > 0 ? "text-azul" : "text-fog" },
+        ].map((c, i) => (
+          <StatCard
             key={c.label}
-            variants={{ hidden: { opacity: 0, y: 18 }, show: { opacity: 1, y: 0, transition: { duration: 0.5, ease } } }}
-            className="rounded-lg border border-ink/8 bg-white p-5 shadow-[0_2px_12px_rgba(30,33,37,0.04)]"
-          >
-            <p className={`font-display text-4xl font-medium ${c.accent}`}>
-              {loading ? "—" : c.value}
-            </p>
-            <p className="mt-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-soft">
-              {c.label}
-            </p>
-          </motion.div>
+            label={c.label}
+            value={loading ? "—" : c.value}
+            accent={c.accent}
+            delay={i * 0.07}
+          />
         ))}
-      </motion.div>
+      </div>
 
       {/* Tabs */}
-      <div className="mt-8 flex items-center gap-1 border-b border-ink/8">
+      <div className="mt-8 flex items-center gap-1 border-b border-edge">
         {(["productos", "ordenes"] as Tab[]).map((t) => (
           <button key={t} onClick={() => { setTab(t); setSearch(""); }} className={tabCls(t)}>
             {tab === t && (
               <motion.span
                 layoutId="vtab"
                 transition={{ duration: 0.3, ease }}
-                className="absolute inset-x-0 bottom-0 h-0.5 bg-burgundy"
+                className="absolute inset-x-0 bottom-0 h-0.5 bg-crimson"
               />
             )}
             <span className="relative capitalize">
@@ -580,7 +577,7 @@ export function GestorVentas() {
               return (
                 <button key={f} onClick={() => setProdFilter(f)} className={filterPillCls(prodFilter === f)}>
                   {prodFilter === f && (
-                    <motion.span layoutId="pfilter" transition={{ duration: 0.28, ease }} className="absolute inset-0 rounded-lg bg-burgundy" />
+                    <motion.span layoutId="pfilter" transition={{ duration: 0.28, ease }} className="absolute inset-0 rounded-lg bg-crimson" />
                   )}
                   <span className="relative">{label}</span>
                 </button>
@@ -592,7 +589,7 @@ export function GestorVentas() {
             {([{ key: "todas", label: "Todas" }].concat(ORDER_STATUS_ORDER.map((s) => ({ key: s, label: ORDER_STATUS[s].label })))).map((f) => (
               <button key={f.key} onClick={() => setOrdFilter(f.key as OrdFilter)} className={filterPillCls(ordFilter === f.key)}>
                 {ordFilter === f.key && (
-                  <motion.span layoutId="ofilter" transition={{ duration: 0.28, ease }} className="absolute inset-0 rounded-lg bg-burgundy" />
+                  <motion.span layoutId="ofilter" transition={{ duration: 0.28, ease }} className="absolute inset-0 rounded-lg bg-crimson" />
                 )}
                 <span className="relative">{f.label}</span>
               </button>
@@ -603,7 +600,7 @@ export function GestorVentas() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder={tab === "productos" ? "Buscar por nombre o SKU…" : "Buscar por cliente o código…"}
-          className="ml-auto max-w-xs rounded-lg border border-ink/12 bg-white px-3.5 py-2 text-sm text-ink outline-none placeholder:text-ink-faint transition-colors focus:border-burgundy/40"
+          className="ml-auto max-w-xs rounded-lg border border-edge bg-carbon px-3.5 py-2 text-sm text-snow outline-none placeholder:text-fog transition-colors focus:border-crimson/40"
         />
       </div>
 
@@ -619,18 +616,23 @@ export function GestorVentas() {
           >
             {loading ? (
               <div className="space-y-3">
-                {Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-16 animate-pulse rounded-lg bg-ink/4" />)}
+                {Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-16 animate-pulse rounded-lg bg-steel" />)}
               </div>
             ) : visibleProducts.length === 0 ? (
-              <p className="rounded-lg border border-dashed border-ink/15 px-5 py-12 text-center text-sm text-ink-faint">
-                {products.length ? "Ningún producto coincide con el filtro." : 'Aún no hay productos. Crea el primero con "+ Nuevo producto".'}
-              </p>
+              <EmptyState
+                title={
+                  products.length
+                    ? "Ningún producto coincide con el filtro."
+                    : "Aún no hay productos."
+                }
+                description={!products.length ? 'Crea el primero con "+ Nuevo producto".' : undefined}
+              />
             ) : (
               <div className="space-y-2">
                 <AnimatePresence mode="popLayout">
                   {visibleProducts.map((p, i) => {
                     const sl = stockLabel(p);
-                    const stockColor = sl === "disponible" ? "text-esmeralda" : sl === "pocas" ? "text-gold" : "text-burgundy";
+                    const stockColor = sl === "disponible" ? "text-esmeralda" : sl === "pocas" ? "text-gold" : "text-[#ff8195]";
                     return (
                       <motion.div
                         key={p.id}
@@ -638,10 +640,10 @@ export function GestorVentas() {
                         initial={{ opacity: 0, y: 14 }}
                         animate={{ opacity: 1, y: 0, transition: { delay: i * 0.03, duration: 0.4, ease } }}
                         exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.2 } }}
-                        className="flex items-center gap-4 rounded-lg border border-ink/8 bg-white p-4 shadow-[0_1px_6px_rgba(30,33,37,0.03)]"
+                        className="flex items-center gap-4 rounded-lg border border-edge bg-carbon/70 p-4"
                       >
                         {/* Imagen miniatura */}
-                        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-cream">
+                        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-steel">
                           {p.image_url
                             ? <Image src={p.image_url} alt={p.name} fill className="object-cover" />
                             : <div className="flex h-full w-full items-center justify-center text-xl">{CATEGORY_LABELS[categories.find(c => c.id === p.category_id)?.slug as CategorySlug]?.emoji ?? "📦"}</div>
@@ -651,19 +653,19 @@ export function GestorVentas() {
                         {/* Info */}
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2">
-                            <p className="truncate font-semibold text-ink">{p.name}</p>
+                            <p className="truncate font-semibold text-snow">{p.name}</p>
                             {!p.published && (
-                              <span className="rounded-md bg-ink/8 px-2 py-0.5 text-[10px] font-semibold text-ink-soft">Oculto</span>
+                              <span className="rounded-md bg-steel px-2 py-0.5 text-[10px] font-semibold text-fog">Oculto</span>
                             )}
                           </div>
-                          <p className="mt-0.5 text-xs text-ink-faint">
+                          <p className="mt-0.5 text-xs text-fog">
                             {catNameOf(p.category_id)}
-                            {p.sku && <span className="font-mono ml-2 text-ink-faint/70">{p.sku}</span>}
+                            {p.sku && <span className="font-mono ml-2 text-fog/70">{p.sku}</span>}
                           </p>
                         </div>
 
                         <div className="shrink-0 text-right">
-                          <p className="font-display text-sm font-semibold text-ink">{money(p.price, p.currency)}</p>
+                          <p className="font-display text-sm font-semibold text-snow">{money(p.price, p.currency)}</p>
                           <p className={`text-xs ${stockColor}`}>
                             Stock: {p.stock}
                           </p>
@@ -673,7 +675,7 @@ export function GestorVentas() {
                         <div className="flex shrink-0 gap-1.5">
                           <button
                             onClick={() => setEditProduct(p)}
-                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-ink/10 text-ink-faint transition-colors hover:border-burgundy/30 hover:text-burgundy"
+                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-edge text-fog transition-colors hover:border-crimson/30 hover:text-[#ff8195]"
                           >
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
                               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
@@ -682,7 +684,7 @@ export function GestorVentas() {
                           </button>
                           <button
                             onClick={() => deleteProduct(p.id)}
-                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-ink/10 text-ink-faint transition-colors hover:border-burgundy/30 hover:text-burgundy"
+                            className="flex h-8 w-8 items-center justify-center rounded-lg border border-edge text-fog transition-colors hover:border-crimson/30 hover:text-[#ff8195]"
                           >
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5">
                               <polyline points="3 6 5 6 21 6" /><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
@@ -710,12 +712,16 @@ export function GestorVentas() {
           >
             {loading ? (
               <div className="space-y-3">
-                {Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-16 animate-pulse rounded-lg bg-ink/4" />)}
+                {Array.from({ length: 5 }).map((_, i) => <div key={i} className="h-16 animate-pulse rounded-lg bg-steel" />)}
               </div>
             ) : visibleOrders.length === 0 ? (
-              <p className="rounded-lg border border-dashed border-ink/15 px-5 py-12 text-center text-sm text-ink-faint">
-                {orders.length ? "Ninguna orden coincide con el filtro." : "Aún no hay órdenes de clientes."}
-              </p>
+              <EmptyState
+                title={
+                  orders.length
+                    ? "Ninguna orden coincide con el filtro."
+                    : "Aún no hay órdenes de clientes."
+                }
+              />
             ) : (
               <div className="space-y-2">
                 <AnimatePresence mode="popLayout">
@@ -731,26 +737,26 @@ export function GestorVentas() {
                         exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.2 } }}
                         whileHover={{ x: 4 }}
                         onClick={() => setSelectedOrder(o)}
-                        className="group flex w-full items-center gap-4 rounded-lg border border-ink/8 bg-white p-4 text-left shadow-[0_1px_6px_rgba(30,33,37,0.03)] transition-shadow hover:shadow-[0_6px_20px_rgba(30,33,37,0.07)]"
+                        className="group flex w-full items-center gap-4 rounded-lg border border-edge bg-carbon/70 p-4 text-left transition-colors hover:border-snow/20"
                       >
-                        <span className="font-mono shrink-0 text-xs text-ink-faint">
+                        <span className="font-mono shrink-0 text-xs text-fog">
                           {orderCode(o.order_no)}
                         </span>
                         <div className="min-w-0 flex-1">
-                          <p className="truncate font-semibold text-ink">{o.client_name}</p>
-                          <p className="mt-0.5 truncate text-xs text-ink-faint">
+                          <p className="truncate font-semibold text-snow">{o.client_name}</p>
+                          <p className="mt-0.5 truncate text-xs text-fog">
                             {o.client_email}
                             {itsCount > 0 && ` · ${itsCount} producto${itsCount !== 1 ? "s" : ""}`}
                           </p>
                         </div>
-                        <span className="font-display shrink-0 text-sm font-semibold text-ink">
+                        <span className="font-display shrink-0 text-sm font-semibold text-snow">
                           {money(o.total)}
                         </span>
                         <span className={`flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-semibold ${st.badge}`}>
                           <span className={`h-1.5 w-1.5 rounded-full ${st.dot}`} />
                           {st.label}
                         </span>
-                        <span className="text-ink-faint transition-transform duration-200 group-hover:translate-x-1 group-hover:text-burgundy">→</span>
+                        <span className="text-fog transition-transform duration-200 group-hover:translate-x-1 group-hover:text-[#ff8195]">→</span>
                       </motion.button>
                     );
                   })}

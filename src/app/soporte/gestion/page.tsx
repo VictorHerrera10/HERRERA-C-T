@@ -6,6 +6,9 @@ import { motion, AnimatePresence } from "motion/react";
 import { supabase } from "@/modules/shared/lib/supabase";
 import { useToast } from "@/modules/shared/components/Toast";
 import { AuthGuard } from "@/modules/auth/components/AuthGuard";
+import { StatCard } from "@/modules/shared/components/StatCard";
+import { EmptyState } from "@/modules/shared/components/EmptyState";
+import { Badge } from "@/modules/shared/components/Badge";
 import {
   type Ticket,
   type TicketStatus,
@@ -134,10 +137,10 @@ function TicketsPageContent() {
   }
 
   const cards = [
-    { label: "Tickets activos", value: stats.activos, accent: "text-azul", ring: "border-azul/25" },
-    { label: "Críticos / Caídas", value: stats.criticos, accent: "text-burgundy", ring: "border-burgundy/25" },
-    { label: "Espera de cliente", value: stats.espera, accent: "text-[#8a6a14]", ring: "border-gold/30" },
-    { label: "Resueltos", value: stats.resueltos, accent: "text-esmeralda", ring: "border-esmeralda/25" },
+    { label: "Tickets activos", value: stats.activos, accent: "text-azul" },
+    { label: "Críticos / Caídas", value: stats.criticos, accent: "text-[#ff8195]" },
+    { label: "Espera de cliente", value: stats.espera, accent: "text-gold-soft" },
+    { label: "Resueltos", value: stats.resueltos, accent: "text-esmeralda" },
   ];
 
   const filterChips: { key: Filter; label: string }[] = [
@@ -156,49 +159,43 @@ function TicketsPageContent() {
         className="flex items-center justify-between gap-4"
       >
         <div>
-          <h1 className="font-display text-3xl font-medium text-ink">
+          <p className="section-number">/ soporte</p>
+          <h1 className="mt-2 font-display text-3xl font-bold text-snow">
             Mesa de ayuda
           </h1>
-          <p className="mt-1 text-sm text-ink-faint">
+          <p className="mt-1 text-sm text-fog">
             Tickets de soporte, incidentes y solicitudes de tus clientes.
           </p>
+          <a
+            href="/soporte"
+            target="_blank"
+            className="mt-2 inline-flex items-center gap-1 text-xs text-azul transition-colors hover:text-snow"
+          >
+            Ver portal del cliente ↗
+          </a>
         </div>
         <motion.button
           whileHover={{ y: -2 }}
           whileTap={{ scale: 0.97 }}
           onClick={() => setModalOpen(true)}
-          className="rounded-lg bg-burgundy px-4 py-2.5 text-sm font-semibold text-ivory shadow-[0_4px_16px_rgba(138,22,38,0.3)] transition-colors hover:bg-burgundy-bright"
+          className="rounded-lg bg-crimson px-4 py-2.5 text-sm font-semibold text-snow shadow-[0_4px_16px_rgba(216,17,43,0.35)] transition-colors hover:bg-crimson-bright"
         >
           + Nuevo ticket
         </motion.button>
       </motion.div>
 
       {/* Tarjetas de estadísticas */}
-      <motion.div
-        initial="hidden"
-        animate="show"
-        variants={{ show: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } } }}
-        className="mt-8 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4"
-      >
-        {cards.map((c) => (
-          <motion.div
+      <div className="mt-8 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+        {cards.map((c, i) => (
+          <StatCard
             key={c.label}
-            variants={{
-              hidden: { opacity: 0, y: 18 },
-              show: { opacity: 1, y: 0, transition: { duration: 0.55, ease } },
-            }}
-            whileHover={{ y: -4 }}
-            className={`rounded-lg border bg-white p-5 shadow-[0_2px_12px_rgba(30,33,37,0.04)] transition-shadow hover:shadow-[0_10px_26px_rgba(30,33,37,0.08)] ${c.ring}`}
-          >
-            <p className={`font-display text-4xl font-medium ${c.accent}`}>
-              {loading ? "—" : c.value}
-            </p>
-            <p className="mt-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-soft">
-              {c.label}
-            </p>
-          </motion.div>
+            label={c.label}
+            value={loading ? "—" : c.value}
+            accent={c.accent}
+            delay={i * 0.08}
+          />
         ))}
-      </motion.div>
+      </div>
 
       {/* Filtros + búsqueda */}
       <motion.div
@@ -213,15 +210,15 @@ function TicketsPageContent() {
             onClick={() => setFilter(f.key)}
             className={`relative rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors ${
               filter === f.key
-                ? "text-ivory"
-                : "text-ink-soft hover:bg-ink/5 hover:text-ink"
+                ? "text-snow"
+                : "text-fog hover:bg-steel hover:text-snow"
             }`}
           >
             {filter === f.key && (
               <motion.span
                 layoutId="filter-pill"
                 transition={{ duration: 0.35, ease }}
-                className="absolute inset-0 rounded-lg bg-burgundy"
+                className="absolute inset-0 rounded-lg bg-crimson"
               />
             )}
             <span className="relative">{f.label}</span>
@@ -231,7 +228,7 @@ function TicketsPageContent() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Buscar por título, cliente o código…"
-          className="field w-full sm:ml-auto sm:w-auto sm:max-w-xs !py-2 text-xs sm:text-sm"
+          className="field-dark w-full sm:ml-auto sm:w-auto sm:max-w-xs !py-2 text-xs sm:text-sm"
         />
       </motion.div>
 
@@ -247,20 +244,20 @@ function TicketsPageContent() {
               exit={{ opacity: 0, scale: 0.98, transition: { duration: 0.2 } }}
               whileHover={{ x: 4 }}
               onClick={() => router.push(`/soporte/gestion/${t.id}`)}
-              className="group relative flex w-full items-center gap-4 overflow-hidden rounded-lg border border-ink/8 bg-white p-4 text-left shadow-[0_1px_8px_rgba(30,33,37,0.03)] transition-shadow hover:shadow-[0_8px_24px_rgba(30,33,37,0.08)]"
+              className="group relative flex w-full items-center gap-4 overflow-hidden rounded-lg border border-edge bg-carbon/70 p-4 text-left transition-colors hover:border-snow/20"
             >
               {/* Barra de prioridad */}
               <span
                 className={`absolute left-0 top-0 h-full w-1 ${PRIORITY[t.priority].bar}`}
               />
 
-              <span className="font-mono ml-2 hidden shrink-0 text-xs text-ink-faint sm:block">
+              <span className="font-mono ml-2 hidden shrink-0 text-xs text-fog sm:block">
                 {ticketCode(t.ticket_no)}
               </span>
 
               <div className="min-w-0 flex-1">
-                <p className="truncate font-semibold text-ink">{t.title}</p>
-                <p className="mt-0.5 truncate text-xs text-ink-faint">
+                <p className="truncate font-semibold text-snow">{t.title}</p>
+                <p className="mt-0.5 truncate text-xs text-fog">
                   {t.client_name || "Sin cliente"} · {timeAgo(t.created_at)}
                 </p>
               </div>
@@ -275,16 +272,22 @@ function TicketsPageContent() {
               >
                 {PRIORITY[t.priority].label}
               </span>
-              <span
-                className={`flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-semibold ${STATUS[t.status].badge}`}
+              <Badge
+                tone={
+                  t.status === "resuelto"
+                    ? "esmeralda"
+                    : t.status === "cerrado"
+                      ? "neutral"
+                      : t.status === "analisis" || t.status === "espera"
+                        ? "gold"
+                        : "azul"
+                }
+                pulse
               >
-                <span
-                  className={`animate-pulse-dot h-1.5 w-1.5 rounded-full ${STATUS[t.status].dot}`}
-                />
                 {STATUS[t.status].label}
-              </span>
+              </Badge>
 
-              <span className="text-ink-faint transition-transform duration-200 group-hover:translate-x-1 group-hover:text-burgundy">
+              <span className="text-ash transition-transform duration-200 group-hover:translate-x-1 group-hover:text-crimson-bright">
                 →
               </span>
             </motion.button>
@@ -292,15 +295,14 @@ function TicketsPageContent() {
         </AnimatePresence>
 
         {!loading && !visible.length && (
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="rounded-lg border border-dashed border-ink/15 px-5 py-12 text-center text-sm text-ink-faint"
-          >
-            {tickets.length
-              ? "Ningún ticket coincide con el filtro."
-              : "La mesa de ayuda está vacía. Crea el primer ticket con “+ Nuevo ticket”."}
-          </motion.p>
+          <EmptyState
+            title={
+              tickets.length
+                ? "Ningún ticket coincide con el filtro."
+                : "La mesa de ayuda está vacía."
+            }
+            description={!tickets.length ? "Crea el primer ticket con “+ Nuevo ticket”." : undefined}
+          />
         )}
       </div>
 
@@ -312,7 +314,7 @@ function TicketsPageContent() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setModalOpen(false)}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-ink/45 p-4 backdrop-blur-sm"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-void/70 p-4 backdrop-blur-sm"
           >
             <motion.div
               initial={{ opacity: 0, y: 28, scale: 0.97 }}
@@ -320,20 +322,20 @@ function TicketsPageContent() {
               exit={{ opacity: 0, y: 18, scale: 0.98 }}
               transition={{ duration: 0.35, ease }}
               onClick={(e) => e.stopPropagation()}
-              className="max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-lg bg-white p-7 shadow-[0_30px_80px_rgba(30,33,37,0.3)]"
+              className="hud-corners max-h-[90vh] w-full max-w-xl overflow-y-auto rounded-lg border border-edge bg-carbon p-7"
             >
               <div className="mb-6 flex items-start justify-between">
                 <div>
-                  <h2 className="font-display text-xl font-medium text-ink">
+                  <h2 className="font-display text-xl font-medium text-snow">
                     Nuevo ticket
                   </h2>
-                  <p className="mt-0.5 text-xs text-ink-faint">
+                  <p className="mt-0.5 text-xs text-fog">
                     Registra un requerimiento, incidente o solicitud.
                   </p>
                 </div>
                 <button
                   onClick={() => setModalOpen(false)}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg text-ink-faint transition-colors hover:bg-ink/5 hover:text-ink"
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-fog transition-colors hover:bg-steel hover:text-snow"
                   aria-label="Cerrar"
                 >
                   ✕
@@ -342,13 +344,13 @@ function TicketsPageContent() {
 
               <div className="space-y-4">
                 <input
-                  className="field"
+                  className="field-dark"
                   placeholder="Título del requerimiento *"
                   value={draft.title}
                   onChange={(e) => setDraft({ ...draft, title: e.target.value })}
                 />
                 <textarea
-                  className="field resize-y"
+                  className="field-dark resize-y"
                   rows={4}
                   placeholder="Describe el problema o la solicitud…"
                   value={draft.description}
@@ -358,7 +360,7 @@ function TicketsPageContent() {
                 />
                 <div className="grid gap-4 sm:grid-cols-2">
                   <input
-                    className="field"
+                    className="field-dark"
                     placeholder="Cliente / Empresa"
                     value={draft.client_name}
                     onChange={(e) =>
@@ -366,7 +368,7 @@ function TicketsPageContent() {
                     }
                   />
                   <input
-                    className="field"
+                    className="field-dark"
                     type="email"
                     placeholder="Correo del cliente"
                     value={draft.client_email}
@@ -377,7 +379,7 @@ function TicketsPageContent() {
                 </div>
 
                 <div>
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-fog">
                     Categoría
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -389,8 +391,8 @@ function TicketsPageContent() {
                           onClick={() => setDraft({ ...draft, category: c })}
                           className={`rounded-lg border px-3.5 py-2 text-xs font-semibold transition-all ${
                             draft.category === c
-                              ? "border-burgundy bg-burgundy/8 text-burgundy"
-                              : "border-ink/12 text-ink-soft hover:border-ink/30"
+                              ? "border-crimson bg-crimson/10 text-snow"
+                              : "border-edge text-fog hover:border-snow/25"
                           }`}
                         >
                           {CATEGORY[c].label}
@@ -401,7 +403,7 @@ function TicketsPageContent() {
                 </div>
 
                 <div>
-                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">
+                  <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-fog">
                     Prioridad
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -413,8 +415,8 @@ function TicketsPageContent() {
                           onClick={() => setDraft({ ...draft, priority: p })}
                           className={`rounded-lg border px-3.5 py-2 text-xs font-semibold transition-all ${
                             draft.priority === p
-                              ? "border-burgundy bg-burgundy/8 text-burgundy"
-                              : "border-ink/12 text-ink-soft hover:border-ink/30"
+                              ? "border-crimson bg-crimson/10 text-snow"
+                              : "border-edge text-fog hover:border-snow/25"
                           }`}
                         >
                           {PRIORITY[p].label}
@@ -430,13 +432,13 @@ function TicketsPageContent() {
                   whileTap={{ scale: 0.97 }}
                   onClick={createTicket}
                   disabled={!draft.title.trim() || saving}
-                  className="flex-1 rounded-lg bg-burgundy px-5 py-3 text-sm font-semibold text-ivory transition-colors hover:bg-burgundy-bright disabled:opacity-50"
+                  className="flex-1 rounded-lg bg-crimson px-5 py-3 text-sm font-semibold text-snow transition-colors hover:bg-crimson-bright disabled:opacity-50"
                 >
                   {saving ? "Creando…" : "Crear ticket"}
                 </motion.button>
                 <button
                   onClick={() => setModalOpen(false)}
-                  className="rounded-lg border border-ink/15 px-5 py-3 text-sm font-medium text-ink-soft transition-colors hover:border-ink/35"
+                  className="rounded-lg border border-edge px-5 py-3 text-sm font-medium text-fog transition-colors hover:border-snow/30"
                 >
                   Cancelar
                 </button>

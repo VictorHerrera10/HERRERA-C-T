@@ -8,6 +8,8 @@ import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { supabase } from "@/modules/shared/lib/supabase";
 import { Icon } from "@/modules/shared/components/Icon";
+import { Select } from "@/modules/shared/components/Select";
+import { Avatar } from "@/modules/shared/components/Avatar";
 import { useToast } from "@/modules/shared/components/Toast";
 import {
   getSession,
@@ -56,7 +58,7 @@ export function UsersManager() {
 
   async function load() {
     const [u, a, r] = await Promise.all([
-      supabase.from("app_users").select("*").order("created_at"),
+      supabase.rpc("hct_list_users"),
       supabase.from("areas").select("*").order("name"),
       supabase.from("area_roles").select("*").order("name"),
     ]);
@@ -65,7 +67,7 @@ export function UsersManager() {
       setLoadFailed(true);
       return toast.error(
         "No se pudo cargar el equipo",
-        `${err.message} — ¿Ejecutaste migration-usuarios.sql?`
+        `${err.message} — ¿Ejecutaste migration-usuarios-hct.sql?`
       );
     }
     setUsers((u.data as AppUser[]) ?? []);
@@ -150,21 +152,18 @@ export function UsersManager() {
           `Su contraseña inicial es su DNI (${draft.dni}); la cambiará en su primer ingreso.`
         );
       } else if (editingId) {
-        const { error } = await supabase
-          .from("app_users")
-          .update({
-            dni: draft.dni,
-            first_name: draft.first_name.trim(),
-            last_name: draft.last_name.trim(),
-            email: draft.email.trim(),
-            phone: draft.phone.trim(),
-            is_admin: draft.is_admin,
-            area_id: draft.area_id,
-            role_id: draft.role_id,
-            modules: draft.modules,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", editingId);
+        const { error } = await supabase.rpc("hct_update_user", {
+          p_user_id: editingId,
+          p_dni: draft.dni,
+          p_first_name: draft.first_name.trim(),
+          p_last_name: draft.last_name.trim(),
+          p_email: draft.email.trim(),
+          p_phone: draft.phone.trim(),
+          p_is_admin: draft.is_admin,
+          p_area_id: draft.area_id,
+          p_role_id: draft.role_id,
+          p_modules: draft.modules,
+        });
         if (error) throw new Error(error.message);
         // Si el admin se editó a sí mismo, refleja el cambio en su sesión
         const session = getSession();
@@ -191,10 +190,10 @@ export function UsersManager() {
   }
 
   async function toggleActive(u: AppUser) {
-    const { error } = await supabase
-      .from("app_users")
-      .update({ active: !u.active, updated_at: new Date().toISOString() })
-      .eq("id", u.id);
+    const { error } = await supabase.rpc("hct_set_user_active", {
+      p_user_id: u.id,
+      p_active: !u.active,
+    });
     if (error) return toast.error("No se pudo cambiar el estado", error.message);
     toast.info(
       u.active
@@ -329,48 +328,34 @@ export function UsersManager() {
                   <label className="text-xs font-semibold uppercase tracking-[0.18em] text-fog">
                     Área
                   </label>
-                  <select
-                    className="field-dark mt-2"
-                    value={draft.area_id ?? ""}
-                    onChange={(e) =>
-                      setDraft({
-                        ...draft,
-                        area_id: e.target.value || null,
-                        role_id: null,
-                      })
-                    }
-                  >
-                    <option value="">— Sin área —</option>
-                    {areas.map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="mt-2">
+                    <Select
+                      value={draft.area_id ?? ""}
+                      onChange={(v) =>
+                        setDraft({
+                          ...draft,
+                          area_id: v || null,
+                          role_id: null,
+                        })
+                      }
+                      placeholder="— Sin área —"
+                      options={areas.map((a) => ({ value: a.id, label: a.name }))}
+                    />
+                  </div>
                 </div>
                 <div>
                   <label className="text-xs font-semibold uppercase tracking-[0.18em] text-fog">
                     Rol
                   </label>
-                  <select
-                    className="field-dark mt-2"
-                    value={draft.role_id ?? ""}
-                    onChange={(e) =>
-                      setDraft({ ...draft, role_id: e.target.value || null })
-                    }
-                    disabled={!draft.area_id}
-                  >
-                    <option value="">
-                      {draft.area_id
-                        ? "— Sin rol —"
-                        : "Elige primero un área"}
-                    </option>
-                    {draftRoles.map((r) => (
-                      <option key={r.id} value={r.id}>
-                        {r.name}
-                      </option>
-                    ))}
-                  </select>
+                  <div className="mt-2">
+                    <Select
+                      value={draft.role_id ?? ""}
+                      onChange={(v) => setDraft({ ...draft, role_id: v || null })}
+                      disabled={!draft.area_id}
+                      placeholder={draft.area_id ? "— Sin rol —" : "Elige primero un área"}
+                      options={draftRoles.map((r) => ({ value: r.id, label: r.name }))}
+                    />
+                  </div>
                   {draft.area_id && draftRoles.length === 0 && (
                     <p className="mt-1.5 text-[11px] text-ash">
                       Esta área aún no tiene roles. Créalos en “Áreas y roles”.
@@ -464,16 +449,11 @@ export function UsersManager() {
             }`}
           >
             <div className="flex flex-wrap items-center gap-4">
-              <span className="relative block h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-edge bg-steel">
-                {u.avatar_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={u.avatar_url} alt="" className="h-full w-full object-cover" />
-                ) : (
-                  <span className="flex h-full w-full items-center justify-center font-display text-sm font-bold text-crimson-bright">
-                    {(u.first_name[0] ?? "") + (u.last_name[0] ?? "")}
-                  </span>
-                )}
-              </span>
+              <Avatar
+                src={u.avatar_url}
+                seed={`${u.first_name} ${u.last_name}` || u.dni}
+                size="md"
+              />
 
               <div className="min-w-0 flex-1">
                 <p className="flex flex-wrap items-center gap-2 font-display text-base font-semibold">

@@ -96,6 +96,7 @@ export function ClientQuoteView() {
         client_note: note.trim(),
         decided_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
+        ...(status === "aprobada" ? { client_accepted_duration: true } : {}),
       })
       .eq("id", quote.id);
     setDeciding(null);
@@ -235,6 +236,44 @@ export function ClientQuoteView() {
                   </div>
                 </div>
 
+                {/* Resumen del proyecto y plazo */}
+                {(quote.project_summary || quote.estimated_duration_text || quote.estimated_delivery_date) && (
+                  <div className="mt-6 grid gap-4 border-b border-edge pb-6 print:border-ink/15 sm:grid-cols-2">
+                    {quote.project_summary && (
+                      <div>
+                        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-ash">
+                          Alcance del proyecto
+                        </p>
+                        <p className="mt-1.5 text-sm leading-relaxed text-fog print:text-ink-soft">
+                          {quote.project_summary}
+                        </p>
+                      </div>
+                    )}
+                    {(quote.estimated_duration_text || quote.estimated_delivery_date) && (
+                      <div>
+                        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-ash">
+                          Tiempo de desarrollo
+                        </p>
+                        {quote.estimated_duration_text && (
+                          <p className="mt-1.5 text-sm text-fog print:text-ink-soft">
+                            {quote.estimated_duration_text}
+                          </p>
+                        )}
+                        {quote.estimated_delivery_date && (
+                          <p className="mt-0.5 text-xs text-ash">
+                            Entrega estimada:{" "}
+                            {new Date(quote.estimated_delivery_date + "T00:00:00").toLocaleDateString("es", {
+                              day: "numeric",
+                              month: "long",
+                              year: "numeric",
+                            })}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Líneas */}
                 <div className="mt-6 space-y-3">
                   {items.map((it, i) => (
@@ -283,8 +322,19 @@ export function ClientQuoteView() {
                   </div>
                 </motion.div>
 
-                {quote.notes && (
+                {quote.terms && (
                   <div className="mt-7 rounded-lg bg-void/60 p-4 print:bg-ivory">
+                    <p className="font-mono mb-1.5 text-[10px] uppercase tracking-[0.2em] text-ash">
+                      Políticas y términos
+                    </p>
+                    <p className="whitespace-pre-wrap text-sm leading-relaxed text-fog print:text-ink-soft">
+                      {quote.terms}
+                    </p>
+                  </div>
+                )}
+
+                {quote.notes && (
+                  <div className="mt-4 rounded-lg bg-void/60 p-4 print:bg-ivory">
                     <p className="font-mono mb-1.5 text-[10px] uppercase tracking-[0.2em] text-ash">
                       Notas y condiciones
                     </p>

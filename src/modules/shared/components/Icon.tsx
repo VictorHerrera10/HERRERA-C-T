@@ -109,6 +109,26 @@ const paths: Record<string, React.ReactNode> = {
       <line x1="21" y1="12" x2="9" y2="12" />
     </>
   ),
+  building: (
+    <>
+      <rect x="4" y="2" width="16" height="20" rx="1" />
+      <line x1="9" y1="6" x2="9" y2="6.01" />
+      <line x1="15" y1="6" x2="15" y2="6.01" />
+      <line x1="9" y1="10" x2="9" y2="10.01" />
+      <line x1="15" y1="10" x2="15" y2="10.01" />
+      <line x1="9" y1="14" x2="9" y2="14.01" />
+      <line x1="15" y1="14" x2="15" y2="14.01" />
+      <path d="M9 22v-4h6v4" />
+    </>
+  ),
+  banknote: (
+    <>
+      <rect x="2" y="6" width="20" height="12" rx="2" />
+      <circle cx="12" cy="12" r="3" />
+      <line x1="6" y1="10" x2="6" y2="10.01" />
+      <line x1="18" y1="14" x2="18" y2="14.01" />
+    </>
+  ),
   menu: (
     <>
       <line x1="3" y1="6" x2="21" y2="6" />
@@ -116,6 +136,7 @@ const paths: Record<string, React.ReactNode> = {
       <line x1="3" y1="18" x2="21" y2="18" />
     </>
   ),
+  "chevron-down": <polyline points="6 9 12 15 18 9" />,
 };
 
 export function Icon({ name, className = "h-6 w-6" }: IconProps) {

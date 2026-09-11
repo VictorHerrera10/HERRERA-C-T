@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { supabase } from "@/modules/shared/lib/supabase";
+import { StatCard } from "@/modules/shared/components/StatCard";
 
 type Stats = {
   services: number | null;
@@ -53,21 +54,22 @@ export default function AdminHome() {
       label: "Mensajes sin leer",
       value: stats.unreadLeads,
       href: "/admin/mensajes",
-      accent: "text-burgundy",
+      accent: "text-[#ff8195]",
     },
   ];
 
   return (
     <div>
-      <h1 className="font-display text-3xl font-medium text-ink">Resumen</h1>
-      <p className="mt-1 text-sm text-ink-faint">
+      <p className="section-number">/ sitio web</p>
+      <h1 className="mt-2 font-display text-3xl font-bold text-snow">Resumen</h1>
+      <p className="mt-1 text-sm text-fog">
         Estado general del sitio público de Herrera C&amp;T.
       </p>
 
       {!stats.dbOk && (
-        <div className="mt-6 rounded-lg border border-gold/40 bg-gold/10 px-5 py-4 text-sm text-ink">
+        <div className="mt-6 rounded-lg border border-gold/40 bg-gold/10 px-5 py-4 text-sm text-snow">
           <strong>Base de datos sin inicializar.</strong> Ejecuta el archivo{" "}
-          <code className="rounded bg-ink/8 px-1.5 py-0.5 text-xs">
+          <code className="rounded bg-steel px-1.5 py-0.5 text-xs">
             supabase/schema.sql
           </code>{" "}
           en el SQL Editor de tu proyecto Supabase para crear las tablas y el
@@ -77,98 +79,45 @@ export default function AdminHome() {
       )}
 
       <div className="mt-8 grid gap-5 sm:grid-cols-3">
-        {cards.map((c) => (
-          <Link
-            key={c.href}
-            href={c.href}
-            className="group rounded-lg border border-ink/8 bg-white p-6 shadow-[0_2px_12px_rgba(30,33,37,0.04)] transition-all hover:-translate-y-1 hover:shadow-[0_12px_30px_rgba(30,33,37,0.09)]"
-          >
-            <p className={`font-display text-4xl font-medium ${c.accent}`}>
-              {c.value ?? "—"}
-            </p>
-            <p className="mt-2 text-xs font-semibold uppercase tracking-[0.14em] text-ink-soft">
-              {c.label}
-            </p>
+        {cards.map((c, i) => (
+          <Link key={c.href} href={c.href} className="block">
+            <StatCard label={c.label} value={c.value ?? "—"} accent={c.accent} delay={i * 0.08} />
           </Link>
         ))}
       </div>
 
-      <div className="mt-10 rounded-lg border border-ink/8 bg-white p-6 lg:p-8">
-        <h2 className="font-display text-xl font-medium text-ink">
+      <div className="mt-10 rounded-lg border border-edge bg-carbon/70 p-6 lg:p-8">
+        <h2 className="font-display text-xl font-medium text-snow">
           Accesos rápidos
         </h2>
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
           <Link
             href="/admin/contenido"
-            className="rounded-lg border border-ink/10 px-4 py-3.5 text-sm font-medium text-ink transition-colors hover:border-burgundy/40 hover:bg-burgundy/4"
+            className="rounded-lg border border-edge px-4 py-3.5 text-sm font-medium text-snow transition-colors hover:border-crimson/40 hover:bg-crimson/8"
           >
             ✏️ Editar textos del sitio (hero, nosotros, contacto…)
           </Link>
           <Link
             href="/admin/servicios"
-            className="rounded-lg border border-ink/10 px-4 py-3.5 text-sm font-medium text-ink transition-colors hover:border-burgundy/40 hover:bg-burgundy/4"
+            className="rounded-lg border border-edge px-4 py-3.5 text-sm font-medium text-snow transition-colors hover:border-crimson/40 hover:bg-crimson/8"
           >
             🧩 Agregar o modificar servicios
           </Link>
           <Link
             href="/admin/mensajes"
-            className="rounded-lg border border-ink/10 px-4 py-3.5 text-sm font-medium text-ink transition-colors hover:border-burgundy/40 hover:bg-burgundy/4"
+            className="rounded-lg border border-edge px-4 py-3.5 text-sm font-medium text-snow transition-colors hover:border-crimson/40 hover:bg-crimson/8"
           >
             📬 Revisar mensajes del formulario de contacto
           </Link>
           <a
             href="/"
             target="_blank"
-            className="rounded-lg border border-ink/10 px-4 py-3.5 text-sm font-medium text-ink transition-colors hover:border-burgundy/40 hover:bg-burgundy/4"
+            className="rounded-lg border border-edge px-4 py-3.5 text-sm font-medium text-snow transition-colors hover:border-crimson/40 hover:bg-crimson/8"
           >
             🌐 Ver el sitio público en otra pestaña
           </a>
         </div>
       </div>
-
-      <div className="mt-6 rounded-lg border border-ink/8 bg-white p-6 lg:p-8">
-        <h2 className="font-display text-xl font-medium text-ink">
-          Módulos conectados
-        </h2>
-        <p className="mt-1 text-xs text-ink-faint">
-          Otros módulos de la plataforma Herrera C&amp;T. Cada uno tiene su
-          propia área de trabajo.
-        </p>
-        <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          <Link
-            href="/soporte/gestion"
-            className="rounded-lg border border-ink/10 px-4 py-3.5 text-sm font-medium text-ink transition-colors hover:border-burgundy/40 hover:bg-burgundy/4"
-          >
-            🎧 Mesa de ayuda — gestión de tickets
-          </Link>
-          <a
-            href="/soporte"
-            target="_blank"
-            className="rounded-lg border border-ink/10 px-4 py-3.5 text-sm font-medium text-ink transition-colors hover:border-burgundy/40 hover:bg-burgundy/4"
-          >
-            🛟 Portal de soporte (vista del cliente) ↗
-          </a>
-          <Link
-            href="/cotizaciones/gestion"
-            className="rounded-lg border border-ink/10 px-4 py-3.5 text-sm font-medium text-ink transition-colors hover:border-burgundy/40 hover:bg-burgundy/4"
-          >
-            📄 Cotizaciones — propuestas comerciales
-          </Link>
-          <a
-            href="/cotizaciones"
-            target="_blank"
-            className="rounded-lg border border-ink/10 px-4 py-3.5 text-sm font-medium text-ink transition-colors hover:border-burgundy/40 hover:bg-burgundy/4"
-          >
-            ✍️ Portal de cotizaciones (vista del cliente) ↗
-          </a>
-        </div>
-      </div>
-
-      <p className="mt-8 rounded-lg bg-cream/70 px-5 py-4 text-xs leading-relaxed text-ink-soft">
-        ⚠ <strong>Nota de seguridad:</strong> este panel aún no tiene login (se
-        implementará en la fase final del proyecto). No publiques la URL{" "}
-        <code>/admin</code> mientras tanto.
-      </p>
     </div>
   );
 }

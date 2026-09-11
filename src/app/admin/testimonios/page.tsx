@@ -65,7 +65,7 @@ export default function TestimoniosPage() {
     return (
       <div className="space-y-4">
         <textarea
-          className="field resize-y"
+          className="field-dark resize-y"
           rows={3}
           placeholder="Cita del cliente"
           value={value.quote}
@@ -73,13 +73,13 @@ export default function TestimoniosPage() {
         />
         <div className="grid gap-4 sm:grid-cols-2">
           <input
-            className="field"
+            className="field-dark"
             placeholder="Autor (ej. Juan Pérez)"
             value={value.author}
             onChange={(e) => onChange({ ...value, author: e.target.value })}
           />
           <input
-            className="field"
+            className="field-dark"
             placeholder="Cargo / Empresa"
             value={value.role}
             onChange={(e) => onChange({ ...value, role: e.target.value })}
@@ -93,8 +93,8 @@ export default function TestimoniosPage() {
     <div>
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl font-medium text-ink">Testimonios</h1>
-          <p className="mt-1 text-sm text-ink-faint">
+          <h1 className="font-display text-3xl font-medium text-snow">Testimonios</h1>
+          <p className="mt-1 text-sm text-fog">
             Citas de clientes que aparecen en el sitio público.
           </p>
         </div>
@@ -103,26 +103,26 @@ export default function TestimoniosPage() {
             setCreating(true);
             setEditing(null);
           }}
-          className="rounded-lg bg-burgundy px-4 py-2.5 text-sm font-semibold text-ivory transition-all hover:-translate-y-0.5 hover:bg-burgundy-bright"
+          className="rounded-lg bg-crimson px-4 py-2.5 text-sm font-semibold text-snow transition-all hover:-translate-y-0.5 hover:bg-crimson-bright"
         >
           + Nuevo testimonio
         </button>
       </div>
 
       {creating && (
-        <div className="mt-6 rounded-lg border border-burgundy/25 bg-white p-6">
+        <div className="mt-6 rounded-lg border border-crimson/25 bg-carbon/70 p-6">
           <Fields value={draft} onChange={setDraft} />
           <div className="mt-5 flex gap-3">
             <button
               onClick={saveNew}
               disabled={!draft.quote.trim() || !draft.author.trim()}
-              className="rounded-lg bg-burgundy px-5 py-2.5 text-sm font-semibold text-ivory hover:bg-burgundy-bright disabled:opacity-50"
+              className="rounded-lg bg-crimson px-5 py-2.5 text-sm font-semibold text-snow hover:bg-crimson-bright disabled:opacity-50"
             >
               Guardar
             </button>
             <button
               onClick={() => setCreating(false)}
-              className="rounded-lg border border-ink/15 px-5 py-2.5 text-sm font-medium text-ink-soft hover:border-ink/35"
+              className="rounded-lg border border-edge px-5 py-2.5 text-sm font-medium text-fog hover:border-snow/30"
             >
               Cancelar
             </button>
@@ -133,7 +133,7 @@ export default function TestimoniosPage() {
       <div className="mt-6 space-y-4">
         {items.map((t) =>
           editing?.id === t.id ? (
-            <div key={t.id} className="rounded-lg border border-burgundy/25 bg-white p-6">
+            <div key={t.id} className="rounded-lg border border-crimson/25 bg-carbon/70 p-6">
               <Fields
                 value={editing}
                 onChange={(v) => setEditing({ ...editing, ...v })}
@@ -141,27 +141,27 @@ export default function TestimoniosPage() {
               <div className="mt-5 flex gap-3">
                 <button
                   onClick={saveEdit}
-                  className="rounded-lg bg-burgundy px-5 py-2.5 text-sm font-semibold text-ivory hover:bg-burgundy-bright"
+                  className="rounded-lg bg-crimson px-5 py-2.5 text-sm font-semibold text-snow hover:bg-crimson-bright"
                 >
                   Guardar cambios
                 </button>
                 <button
                   onClick={() => setEditing(null)}
-                  className="rounded-lg border border-ink/15 px-5 py-2.5 text-sm font-medium text-ink-soft hover:border-ink/35"
+                  className="rounded-lg border border-edge px-5 py-2.5 text-sm font-medium text-fog hover:border-snow/30"
                 >
                   Cancelar
                 </button>
               </div>
             </div>
           ) : (
-            <div key={t.id} className="rounded-lg border border-ink/8 bg-white p-5">
-              <blockquote className="font-display text-lg font-light italic text-ink">
+            <div key={t.id} className="rounded-lg border border-edge bg-carbon/70 p-5">
+              <blockquote className="font-display text-lg font-light italic text-snow">
                 “{t.quote}”
               </blockquote>
               <div className="mt-3 flex items-center justify-between">
-                <p className="text-sm font-medium text-ink-soft">
+                <p className="text-sm font-medium text-fog">
                   {t.author}
-                  {t.role && <span className="text-ink-faint"> · {t.role}</span>}
+                  {t.role && <span className="text-fog"> · {t.role}</span>}
                 </p>
                 <div className="flex gap-2 text-xs font-medium">
                   <button
@@ -175,7 +175,7 @@ export default function TestimoniosPage() {
                   </button>
                   <button
                     onClick={() => remove(t.id)}
-                    className="rounded-md bg-burgundy/8 px-3 py-1.5 text-burgundy hover:bg-burgundy/15"
+                    className="rounded-md bg-crimson/10 px-3 py-1.5 text-[#ff8195] hover:bg-crimson/15"
                   >
                     Eliminar
                   </button>
@@ -185,7 +185,7 @@ export default function TestimoniosPage() {
           )
         )}
         {!items.length && (
-          <p className="rounded-lg border border-dashed border-ink/15 px-5 py-8 text-center text-sm text-ink-faint">
+          <p className="rounded-lg border border-dashed border-edge px-5 py-8 text-center text-sm text-fog">
             Sin testimonios aún.
           </p>
         )}

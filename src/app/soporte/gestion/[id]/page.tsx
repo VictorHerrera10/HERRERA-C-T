@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { supabase } from "@/modules/shared/lib/supabase";
 import { useToast } from "@/modules/shared/components/Toast";
 import { AuthGuard } from "@/modules/auth/components/AuthGuard";
+import { Spinner } from "@/modules/shared/components/Spinner";
 import {
   type Ticket,
   type TicketComment,
@@ -90,11 +91,7 @@ function TicketDetailPageContent() {
   }
 
   if (!ticket)
-    return (
-      <p className="text-sm text-ink-faint">
-        {loadFailed ? "No se pudo cargar el ticket." : "Cargando ticket…"}
-      </p>
-    );
+    return <Spinner />;
 
   return (
     <div>
@@ -106,17 +103,17 @@ function TicketDetailPageContent() {
       >
         <Link
           href="/soporte/gestion"
-          className="text-xs font-medium text-ink-faint transition-colors hover:text-burgundy"
+          className="text-xs font-medium text-fog transition-colors hover:text-crimson-bright"
         >
           ← Mesa de ayuda
         </Link>
 
         <div className="mt-3 flex flex-wrap items-start justify-between gap-4">
           <div className="min-w-0">
-            <p className="font-mono text-xs text-ink-faint">
+            <p className="font-mono text-xs text-fog">
               {ticketCode(ticket.ticket_no)} · creado {timeAgo(ticket.created_at)}
             </p>
-            <h1 className="font-display mt-1 text-2xl font-medium text-ink sm:text-3xl">
+            <h1 className="font-display mt-1 text-2xl font-medium text-snow sm:text-3xl">
               {ticket.title}
             </h1>
             <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -126,7 +123,7 @@ function TicketDetailPageContent() {
                 {CATEGORY[ticket.category].label}
               </span>
               {ticket.client_name && (
-                <span className="rounded-md bg-ink/6 px-2.5 py-1 text-[11px] font-medium text-ink-soft">
+                <span className="rounded-md bg-steel px-2.5 py-1 text-[11px] font-medium text-fog">
                   {ticket.client_name}
                   {ticket.client_email && ` · ${ticket.client_email}`}
                 </span>
@@ -135,7 +132,7 @@ function TicketDetailPageContent() {
           </div>
           <button
             onClick={removeTicket}
-            className="rounded-lg border border-burgundy/25 px-3.5 py-2 text-xs font-semibold text-burgundy transition-colors hover:bg-burgundy/8"
+            className="rounded-lg border border-crimson/25 px-3.5 py-2 text-xs font-semibold text-[#ff8195] transition-colors hover:bg-crimson/10"
           >
             Eliminar ticket
           </button>
@@ -147,9 +144,9 @@ function TicketDetailPageContent() {
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1, ease }}
-        className="mt-7 rounded-lg border border-ink/8 bg-white p-5"
+        className="mt-7 rounded-lg border border-edge bg-carbon/70 p-5"
       >
-        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">
+        <p className="mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-fog">
           Estado del ticket
         </p>
         <div className="flex flex-wrap items-center gap-1.5">
@@ -163,23 +160,23 @@ function TicketDetailPageContent() {
                   onClick={() => update({ status: s })}
                   className={`relative rounded-lg px-3 py-2 text-xs font-semibold transition-colors ${
                     isCurrent
-                      ? "text-ivory"
+                      ? "text-snow"
                       : isPast
-                        ? "text-ink hover:bg-ink/5"
-                        : "text-ink-faint hover:bg-ink/5 hover:text-ink"
+                        ? "text-snow/80 hover:bg-steel"
+                        : "text-fog hover:bg-steel hover:text-snow"
                   }`}
                 >
                   {isCurrent && (
                     <motion.span
                       layoutId="status-pill"
                       transition={{ duration: 0.35, ease }}
-                      className="absolute inset-0 rounded-lg bg-burgundy"
+                      className="absolute inset-0 rounded-lg bg-crimson"
                     />
                   )}
                   <span className="relative flex items-center gap-1.5">
                     <span
                       className={`h-1.5 w-1.5 rounded-full ${
-                        isCurrent ? "bg-ivory" : STATUS[s].dot
+                        isCurrent ? "bg-snow" : STATUS[s].dot
                       } ${isCurrent ? "animate-pulse-dot" : ""}`}
                     />
                     {STATUS[s].label}
@@ -187,7 +184,7 @@ function TicketDetailPageContent() {
                 </button>
                 {i < STATUS_ORDER.length - 1 && (
                   <span
-                    className={`h-px w-4 ${isPast ? "bg-burgundy/40" : "bg-ink/12"}`}
+                    className={`h-px w-4 ${isPast ? "bg-crimson/40" : "bg-edge"}`}
                   />
                 )}
               </div>
@@ -195,7 +192,7 @@ function TicketDetailPageContent() {
           })}
         </div>
 
-        <p className="mb-3 mt-6 text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">
+        <p className="mb-3 mt-6 text-xs font-semibold uppercase tracking-[0.12em] text-fog">
           Prioridad
         </p>
         <div className="flex flex-wrap gap-2">
@@ -205,8 +202,8 @@ function TicketDetailPageContent() {
               onClick={() => update({ priority: p })}
               className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition-all ${
                 ticket.priority === p
-                  ? "border-burgundy bg-burgundy/8 text-burgundy"
-                  : "border-ink/12 text-ink-soft hover:border-ink/30"
+                  ? "border-crimson bg-crimson/10 text-snow"
+                  : "border-edge text-fog hover:border-snow/25"
               }`}
             >
               {PRIORITY[p].label}
@@ -221,12 +218,12 @@ function TicketDetailPageContent() {
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.18, ease }}
-          className="mt-5 rounded-lg border border-ink/8 bg-white p-5"
+          className="mt-5 rounded-lg border border-edge bg-carbon/70 p-5"
         >
-          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-fog">
             Descripción
           </p>
-          <p className="whitespace-pre-wrap text-sm leading-relaxed text-ink">
+          <p className="whitespace-pre-wrap text-sm leading-relaxed text-snow/90">
             {ticket.description}
           </p>
         </motion.div>
@@ -237,9 +234,9 @@ function TicketDetailPageContent() {
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.26, ease }}
-        className="mt-5 rounded-lg border border-ink/8 bg-white p-5"
+        className="mt-5 rounded-lg border border-edge bg-carbon/70 p-5"
       >
-        <p className="mb-4 text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">
+        <p className="mb-4 text-xs font-semibold uppercase tracking-[0.12em] text-fog">
           Conversación ({comments.length})
         </p>
 
@@ -253,17 +250,17 @@ function TicketDetailPageContent() {
                 transition={{ duration: 0.4, ease }}
                 className="flex gap-3"
               >
-                <span className="font-display flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-burgundy/10 text-sm font-semibold text-burgundy">
+                <span className="font-display flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-crimson/10 text-sm font-semibold text-crimson-bright">
                   {c.author.charAt(0)}
                 </span>
-                <div className="min-w-0 flex-1 rounded-lg bg-ivory px-4 py-3">
+                <div className="min-w-0 flex-1 rounded-lg bg-steel/60 px-4 py-3">
                   <div className="flex items-baseline justify-between gap-3">
-                    <p className="text-xs font-semibold text-ink">{c.author}</p>
-                    <time className="shrink-0 text-[10px] text-ink-faint">
+                    <p className="text-xs font-semibold text-snow">{c.author}</p>
+                    <time className="shrink-0 text-[10px] text-fog">
                       {timeAgo(c.created_at)}
                     </time>
                   </div>
-                  <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-ink-soft">
+                  <p className="mt-1 whitespace-pre-wrap text-sm leading-relaxed text-fog">
                     {c.body}
                   </p>
                 </div>
@@ -272,30 +269,30 @@ function TicketDetailPageContent() {
           </AnimatePresence>
 
           {!comments.length && (
-            <p className="rounded-lg border border-dashed border-ink/12 px-4 py-6 text-center text-xs text-ink-faint">
+            <p className="rounded-lg border border-dashed border-edge px-4 py-6 text-center text-xs text-fog">
               Sin respuestas aún. Escribe la primera actualización del ticket.
             </p>
           )}
         </div>
 
         {/* Responder */}
-        <div className="mt-5 border-t border-ink/8 pt-5">
+        <div className="mt-5 border-t border-edge pt-5">
           <textarea
-            className="field resize-y"
+            className="field-dark resize-y"
             rows={3}
             placeholder="Escribe una actualización o respuesta…"
             value={reply}
             onChange={(e) => setReply(e.target.value)}
           />
           <div className="mt-3 flex items-center justify-between gap-3">
-            <p className="text-[11px] text-ink-faint">
+            <p className="text-[11px] text-fog">
               La respuesta queda registrada en el historial del ticket.
             </p>
             <motion.button
               whileTap={{ scale: 0.97 }}
               onClick={sendReply}
               disabled={!reply.trim() || sending}
-              className="rounded-lg bg-burgundy px-5 py-2.5 text-sm font-semibold text-ivory transition-colors hover:bg-burgundy-bright disabled:opacity-50"
+              className="rounded-lg bg-crimson px-5 py-2.5 text-sm font-semibold text-snow transition-colors hover:bg-crimson-bright disabled:opacity-50"
             >
               {sending ? "Enviando…" : "Responder"}
             </motion.button>

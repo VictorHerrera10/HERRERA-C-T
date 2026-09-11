@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { motion, useScroll, useMotionValueEvent, AnimatePresence } from "motion/react";
 
 const links = [
@@ -61,12 +62,12 @@ export function Navbar() {
               <span className="absolute -bottom-1.5 left-0 h-px w-0 bg-crimson transition-all duration-300 group-hover:w-full" />
             </a>
           ))}
-          <a
-            href="#contacto"
+          <Link
+            href="/portal/cliente"
             className="rounded-lg bg-crimson px-4 py-2 text-xs font-bold uppercase tracking-wider text-snow shadow-[0_4px_18px_rgba(216,17,43,0.4)] transition-all hover:-translate-y-0.5 hover:bg-crimson-bright"
           >
-            Cotizar
-          </a>
+            Portal
+          </Link>
         </div>
 
         <button
@@ -102,13 +103,13 @@ export function Navbar() {
                   {l.label}
                 </a>
               ))}
-              <a
-                href="#contacto"
+              <Link
+                href="/portal/cliente"
                 onClick={() => setOpen(false)}
                 className="mt-2 rounded-lg bg-crimson px-4 py-2.5 text-center text-sm font-bold uppercase tracking-wider text-snow"
               >
-                Cotizar proyecto
-              </a>
+                Portal
+              </Link>
             </div>
           </motion.div>
         )}

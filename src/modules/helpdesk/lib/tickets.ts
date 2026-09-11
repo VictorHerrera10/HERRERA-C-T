@@ -33,7 +33,7 @@ export type TicketComment = {
   created_at: string;
 };
 
-/* ── Configuración visual (tema claro del panel) ─────────── */
+/* ── Configuración visual (tema oscuro del panel) ─────────── */
 
 export const STATUS_ORDER: TicketStatus[] = [
   "nuevo",
@@ -55,7 +55,7 @@ export const STATUS: Record<
   },
   analisis: {
     label: "En análisis",
-    badge: "bg-gold/15 text-[#8a6a14]",
+    badge: "bg-gold/15 text-gold-soft",
     dot: "bg-gold",
   },
   desarrollo: {
@@ -65,7 +65,7 @@ export const STATUS: Record<
   },
   espera: {
     label: "Espera de cliente",
-    badge: "bg-gold/15 text-[#8a6a14]",
+    badge: "bg-gold/15 text-gold-soft",
     dot: "bg-gold",
   },
   resuelto: {
@@ -75,8 +75,8 @@ export const STATUS: Record<
   },
   cerrado: {
     label: "Cerrado",
-    badge: "bg-ink/8 text-ink-soft",
-    dot: "bg-ink-faint",
+    badge: "bg-steel text-fog",
+    dot: "bg-ash",
   },
 };
 
@@ -85,10 +85,10 @@ export const CATEGORY: Record<
   { label: string; chip: string }
 > = {
   soporte: { label: "Soporte", chip: "bg-azul/10 text-azul" },
-  caida: { label: "Caída / Incidente", chip: "bg-burgundy/10 text-burgundy" },
+  caida: { label: "Caída / Incidente", chip: "bg-crimson/10 text-[#ff8195]" },
   funcionalidad: {
     label: "Nueva funcionalidad",
-    chip: "bg-ink/8 text-ink-soft",
+    chip: "bg-steel text-fog",
   },
 };
 
@@ -98,26 +98,26 @@ export const PRIORITY: Record<
 > = {
   critica: {
     label: "Crítica",
-    chip: "bg-burgundy text-ivory",
-    bar: "bg-burgundy",
+    chip: "bg-crimson text-snow",
+    bar: "bg-crimson",
     weight: 4,
   },
   alta: {
     label: "Alta",
-    chip: "bg-burgundy/12 text-burgundy",
-    bar: "bg-burgundy/60",
+    chip: "bg-crimson/12 text-[#ff8195]",
+    bar: "bg-crimson/60",
     weight: 3,
   },
   media: {
     label: "Media",
-    chip: "bg-gold/15 text-[#8a6a14]",
+    chip: "bg-gold/15 text-gold-soft",
     bar: "bg-gold",
     weight: 2,
   },
   baja: {
     label: "Baja",
-    chip: "bg-ink/8 text-ink-soft",
-    bar: "bg-ink/20",
+    chip: "bg-steel text-fog",
+    bar: "bg-edge",
     weight: 1,
   },
 };

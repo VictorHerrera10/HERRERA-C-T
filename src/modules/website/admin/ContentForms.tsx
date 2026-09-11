@@ -13,7 +13,7 @@ import { Field, TextArea, SaveButton, SectionCard } from "./ui";
 import { useSetting } from "./useSetting";
 
 function Loading() {
-  return <p className="text-sm text-ink-faint">Cargando…</p>;
+  return <p className="text-sm text-fog">Cargando…</p>;
 }
 
 /* ── Hero ────────────────────────────────────────────────── */
@@ -70,14 +70,14 @@ export function HeroForm() {
       </div>
 
       <div>
-        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-fog">
           Estadísticas (3)
         </p>
         <div className="grid gap-3 sm:grid-cols-3">
           {value.stats.map((s, i) => (
-            <div key={i} className="space-y-2 rounded-lg border border-ink/8 p-3">
+            <div key={i} className="space-y-2 rounded-lg border border-edge p-3">
               <input
-                className="field"
+                className="field-dark"
                 placeholder="Valor (ej. 99.9%)"
                 value={s.value}
                 onChange={(e) => {
@@ -87,7 +87,7 @@ export function HeroForm() {
                 }}
               />
               <input
-                className="field"
+                className="field-dark"
                 placeholder="Etiqueta"
                 value={s.label}
                 onChange={(e) => {
@@ -224,7 +224,7 @@ export function ProcessForm() {
 
       <div className="space-y-3">
         {value.steps.map((step, i) => (
-          <div key={i} className="rounded-lg border border-ink/8 p-4">
+          <div key={i} className="rounded-lg border border-edge p-4">
             <div className="mb-2 flex items-center justify-between">
               <span className="font-display text-sm italic text-gold">
                 Paso {i + 1}
@@ -237,14 +237,14 @@ export function ProcessForm() {
                     steps: value.steps.filter((_, j) => j !== i),
                   })
                 }
-                className="text-xs font-medium text-burgundy hover:underline"
+                className="text-xs font-medium text-[#ff8195] hover:underline"
               >
                 Eliminar
               </button>
             </div>
             <div className="space-y-2">
               <input
-                className="field"
+                className="field-dark"
                 placeholder="Título del paso"
                 value={step.title}
                 onChange={(e) => {
@@ -254,7 +254,7 @@ export function ProcessForm() {
                 }}
               />
               <textarea
-                className="field resize-y"
+                className="field-dark resize-y"
                 rows={2}
                 placeholder="Descripción"
                 value={step.description}
@@ -275,7 +275,7 @@ export function ProcessForm() {
               steps: [...value.steps, { title: "", description: "" }],
             })
           }
-          className="rounded-lg border border-dashed border-ink/20 px-4 py-2.5 text-sm font-medium text-ink-soft transition-colors hover:border-burgundy/50 hover:text-burgundy"
+          className="rounded-lg border border-dashed border-edge px-4 py-2.5 text-sm font-medium text-fog transition-colors hover:border-crimson/50 hover:text-[#ff8195]"
         >
           + Agregar paso
         </button>

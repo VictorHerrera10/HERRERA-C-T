@@ -91,13 +91,13 @@ export default function ServiciosPage() {
     return (
       <div className="space-y-4">
         <input
-          className="field"
+          className="field-dark"
           placeholder="Título del servicio"
           value={value.title}
           onChange={(e) => onChange({ ...value, title: e.target.value })}
         />
         <textarea
-          className="field resize-y"
+          className="field-dark resize-y"
           rows={3}
           placeholder="Descripción breve"
           value={value.description}
@@ -105,7 +105,7 @@ export default function ServiciosPage() {
         />
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-fog">
               Ícono
             </p>
             <div className="flex flex-wrap gap-2">
@@ -116,8 +116,8 @@ export default function ServiciosPage() {
                   onClick={() => onChange({ ...value, icon: name })}
                   className={`flex h-10 w-10 items-center justify-center rounded-lg border transition-colors ${
                     value.icon === name
-                      ? "border-burgundy bg-burgundy/8 text-burgundy"
-                      : "border-ink/10 text-ink-soft hover:border-ink/30"
+                      ? "border-crimson bg-crimson/10 text-[#ff8195]"
+                      : "border-edge text-fog hover:border-snow/25"
                   }`}
                   title={name}
                 >
@@ -127,7 +127,7 @@ export default function ServiciosPage() {
             </div>
           </div>
           <div>
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-ink-soft">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.12em] text-fog">
               Color de acento
             </p>
             <div className="flex flex-wrap gap-2">
@@ -138,8 +138,8 @@ export default function ServiciosPage() {
                   onClick={() => onChange({ ...value, accent: a.value })}
                   className={`rounded-lg border px-3 py-2 text-xs font-medium transition-colors ${
                     value.accent === a.value
-                      ? "border-burgundy bg-burgundy/8 text-burgundy"
-                      : "border-ink/10 text-ink-soft hover:border-ink/30"
+                      ? "border-crimson bg-crimson/10 text-[#ff8195]"
+                      : "border-edge text-fog hover:border-snow/25"
                   }`}
                 >
                   {a.label}
@@ -156,8 +156,8 @@ export default function ServiciosPage() {
     <div>
       <div className="flex items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl font-medium text-ink">Servicios</h1>
-          <p className="mt-1 text-sm text-ink-faint">
+          <h1 className="font-display text-3xl font-medium text-snow">Servicios</h1>
+          <p className="mt-1 text-sm text-fog">
             Las tarjetas que se muestran en la sección “Servicios” del sitio.
           </p>
         </div>
@@ -166,15 +166,15 @@ export default function ServiciosPage() {
             setCreating(true);
             setEditing(null);
           }}
-          className="rounded-lg bg-burgundy px-4 py-2.5 text-sm font-semibold text-ivory transition-all hover:-translate-y-0.5 hover:bg-burgundy-bright"
+          className="rounded-lg bg-crimson px-4 py-2.5 text-sm font-semibold text-snow transition-all hover:-translate-y-0.5 hover:bg-crimson-bright"
         >
           + Nuevo servicio
         </button>
       </div>
 
       {creating && (
-        <div className="mt-6 rounded-lg border border-burgundy/25 bg-white p-6">
-          <h2 className="font-display mb-4 text-lg font-medium text-ink">
+        <div className="mt-6 rounded-lg border border-crimson/25 bg-carbon/70 p-6">
+          <h2 className="font-display mb-4 text-lg font-medium text-snow">
             Nuevo servicio
           </h2>
           <ServiceFields value={draft} onChange={setDraft} />
@@ -182,13 +182,13 @@ export default function ServiciosPage() {
             <button
               onClick={saveNew}
               disabled={!draft.title.trim()}
-              className="rounded-lg bg-burgundy px-5 py-2.5 text-sm font-semibold text-ivory hover:bg-burgundy-bright disabled:opacity-50"
+              className="rounded-lg bg-crimson px-5 py-2.5 text-sm font-semibold text-snow hover:bg-crimson-bright disabled:opacity-50"
             >
               Guardar
             </button>
             <button
               onClick={() => setCreating(false)}
-              className="rounded-lg border border-ink/15 px-5 py-2.5 text-sm font-medium text-ink-soft hover:border-ink/35"
+              className="rounded-lg border border-edge px-5 py-2.5 text-sm font-medium text-fog hover:border-snow/30"
             >
               Cancelar
             </button>
@@ -199,7 +199,7 @@ export default function ServiciosPage() {
       <div className="mt-6 space-y-4">
         {services.map((s) =>
           editing?.id === s.id ? (
-            <div key={s.id} className="rounded-lg border border-burgundy/25 bg-white p-6">
+            <div key={s.id} className="rounded-lg border border-crimson/25 bg-carbon/70 p-6">
               <ServiceFields
                 value={editing}
                 onChange={(v) => setEditing({ ...editing, ...v })}
@@ -207,13 +207,13 @@ export default function ServiciosPage() {
               <div className="mt-5 flex gap-3">
                 <button
                   onClick={saveEdit}
-                  className="rounded-lg bg-burgundy px-5 py-2.5 text-sm font-semibold text-ivory hover:bg-burgundy-bright"
+                  className="rounded-lg bg-crimson px-5 py-2.5 text-sm font-semibold text-snow hover:bg-crimson-bright"
                 >
                   Guardar cambios
                 </button>
                 <button
                   onClick={() => setEditing(null)}
-                  className="rounded-lg border border-ink/15 px-5 py-2.5 text-sm font-medium text-ink-soft hover:border-ink/35"
+                  className="rounded-lg border border-edge px-5 py-2.5 text-sm font-medium text-fog hover:border-snow/30"
                 >
                   Cancelar
                 </button>
@@ -222,16 +222,16 @@ export default function ServiciosPage() {
           ) : (
             <div
               key={s.id}
-              className={`flex items-start gap-4 rounded-lg border border-ink/8 bg-white p-5 ${
+              className={`flex items-start gap-4 rounded-lg border border-edge bg-carbon/70 p-5 ${
                 !s.published ? "opacity-55" : ""
               }`}
             >
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-burgundy/8 text-burgundy">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-crimson/10 text-[#ff8195]">
                 <Icon name={s.icon} className="h-5 w-5" />
               </span>
               <div className="min-w-0 flex-1">
-                <p className="font-semibold text-ink">{s.title}</p>
-                <p className="mt-0.5 line-clamp-2 text-sm text-ink-soft">
+                <p className="font-semibold text-snow">{s.title}</p>
+                <p className="mt-0.5 line-clamp-2 text-sm text-fog">
                   {s.description}
                 </p>
               </div>
@@ -241,7 +241,7 @@ export default function ServiciosPage() {
                   className={`rounded-md px-3 py-1.5 ${
                     s.published
                       ? "bg-esmeralda/10 text-esmeralda"
-                      : "bg-ink/8 text-ink-soft"
+                      : "bg-steel text-fog"
                   }`}
                 >
                   {s.published ? "Publicado" : "Oculto"}
@@ -257,7 +257,7 @@ export default function ServiciosPage() {
                 </button>
                 <button
                   onClick={() => remove(s.id)}
-                  className="rounded-md bg-burgundy/8 px-3 py-1.5 text-burgundy hover:bg-burgundy/15"
+                  className="rounded-md bg-crimson/10 px-3 py-1.5 text-[#ff8195] hover:bg-crimson/15"
                 >
                   Eliminar
                 </button>
@@ -266,7 +266,7 @@ export default function ServiciosPage() {
           )
         )}
         {!services.length && (
-          <p className="rounded-lg border border-dashed border-ink/15 px-5 py-8 text-center text-sm text-ink-faint">
+          <p className="rounded-lg border border-dashed border-edge px-5 py-8 text-center text-sm text-fog">
             Aún no hay servicios en la base de datos. El sitio muestra los
             servicios por defecto. Crea el primero con “+ Nuevo servicio”.
           </p>

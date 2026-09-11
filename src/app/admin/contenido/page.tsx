@@ -13,10 +13,10 @@ import {
 export default function ContenidoPage() {
   return (
     <div>
-      <h1 className="font-display text-3xl font-medium text-ink">
+      <h1 className="font-display text-3xl font-medium text-snow">
         Contenido del sitio
       </h1>
-      <p className="mt-1 text-sm text-ink-faint">
+      <p className="mt-1 text-sm text-fog">
         Edita los textos de cada sección. Los cambios se publican al instante.
       </p>
 
