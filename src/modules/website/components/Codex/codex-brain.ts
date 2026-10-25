@@ -25,13 +25,13 @@ const KNOWLEDGE: KnowledgeEntry[] = [
   /* Saludo / hola */
   {
     keywords: ["hola", "buenas", "buenos", "hi", "hey", "saludos", "buen dia", "buenas tardes", "buenas noches"],
-    answer: "¡Hola! 👋 Soy Codex, el asistente de Herrera C&T. Estoy aquí para contarte todo sobre nuestros servicios, precios, cómo trabajamos y más. ¿Qué te gustaría saber?",
+    answer: "¡Hola! 👋 Soy Codex, el asistente de Horizen Tecnología & Información. Estoy aquí para contarte todo sobre nuestros servicios, precios, cómo trabajamos y más. ¿Qué te gustaría saber?",
   },
 
   /* Servicios generales */
   {
     keywords: ["servicio", "servicios", "qué hacen", "que hacen", "que ofrecen", "qué ofrecen", "ofrecen", "ayudan", "hacen"],
-    answer: "En Herrera C&T ofrecemos:\n\n🖥️ **Desarrollo de software a medida** — sistemas y apps web construidos para tu negocio exacto.\n\n☁️ **Infraestructura & Cloud** — servidores y nube siempre disponibles y seguros.\n\n🛠️ **Soporte TI continuo** — ayuda técnica cuando la necesitas, con tiempos de respuesta comprometidos.\n\n🌐 **Dominios & Hosting** — correos corporativos, hosting y dominios sin complicaciones.\n\n🔒 **Ciberseguridad** — protección real para tu operación.\n\n📊 **Consultoría estratégica** — te ayudamos a tomar mejores decisiones tecnológicas.\n\n¿Sobre cuál te cuento más? 😊",
+    answer: "En Horizen Tecnología & Información ofrecemos:\n\n🖥️ **Desarrollo de software a medida** — sistemas y apps web construidos para tu negocio exacto.\n\n☁️ **Infraestructura & Cloud** — servidores y nube siempre disponibles y seguros.\n\n🛠️ **Soporte TI continuo** — ayuda técnica cuando la necesitas, con tiempos de respuesta comprometidos.\n\n🌐 **Dominios & Hosting** — correos corporativos, hosting y dominios sin complicaciones.\n\n🔒 **Ciberseguridad** — protección real para tu operación.\n\n📊 **Consultoría estratégica** — te ayudamos a tomar mejores decisiones tecnológicas.\n\n¿Sobre cuál te cuento más? 😊",
   },
 
   /* Desarrollo de software */
@@ -90,8 +90,8 @@ const KNOWLEDGE: KnowledgeEntry[] = [
 
   /* Quiénes somos / empresa */
   {
-    keywords: ["quienes son", "quiénes son", "empresa", "consultora", "herrera", "experiencia", "trayectoria", "confianza", "sobre ustedes", "acerca"],
-    answer: "🏢 Somos **Herrera Consulting & Technology**, una consultora especializada en tecnología para empresas.\n\nNacimos con una convicción simple: las empresas merecen un socio tecnológico que **hable claro, responda rápido y construya para durar**.\n\n✅ +10 años de experiencia\n✅ 99.9% de uptime garantizado\n✅ Soporte 24/7\n\nNo vendemos horas: asumimos resultados. 💪",
+    keywords: ["quienes son", "quiénes son", "empresa", "consultora", "horizen", "experiencia", "trayectoria", "confianza", "sobre ustedes", "acerca"],
+    answer: "🏢 Somos **Horizen Tecnología & Información**, una consultora especializada en tecnología para empresas.\n\nNacimos con una convicción simple: las empresas merecen un socio tecnológico que **hable claro, responda rápido y construya para durar**.\n\n✅ +10 años de experiencia\n✅ 99.9% de uptime garantizado\n✅ Soporte 24/7\n\nNo vendemos horas: asumimos resultados. 💪",
   },
 
   /* Contacto / comunicarse */
@@ -129,7 +129,7 @@ const KNOWLEDGE: KnowledgeEntry[] = [
   /* Gracias */
   {
     keywords: ["gracias", "muchas gracias", "thank", "perfecto", "genial", "excelente", "ok", "listo", "entendido", "claro"],
-    answer: "¡Con gusto! 😊 Si tienes más preguntas estoy aquí. Y si quieres avanzar con algo, el equipo de Herrera C&T está a un mensaje de distancia. 🚀",
+    answer: "¡Con gusto! 😊 Si tienes más preguntas estoy aquí. Y si quieres avanzar con algo, el equipo de Horizen Tecnología & Información está a un mensaje de distancia. 🚀",
     ctaLabel: "Contactar al equipo",
     ctaHref: "#contacto",
   },
@@ -137,7 +137,7 @@ const KNOWLEDGE: KnowledgeEntry[] = [
   /* Fallback */
   {
     keywords: [],
-    answer: "Hmm, no estoy seguro de poder responder eso con detalle. 🤔 Pero el equipo de Herrera C&T sí puede ayudarte. ¿Te conecto con ellos?",
+    answer: "Hmm, no estoy seguro de poder responder eso con detalle. 🤔 Pero el equipo de Horizen Tecnología & Información sí puede ayudarte. ¿Te conecto con ellos?",
     ctaLabel: "Hablar con el equipo",
     ctaHref: "#contacto",
     ctaLabel2: "Abrir ticket de soporte",
@@ -148,7 +148,7 @@ const KNOWLEDGE: KnowledgeEntry[] = [
 /* ── Saludo inicial ────────────────────────────────────────────────── */
 export const CODEX_GREETING: Omit<CodexMessage, "id"> = {
   from: "codex",
-  text: "¡Hola! 👋 Soy **Codex**, el asistente de **Herrera C&T**.\n\nEstoy aquí para responder tus dudas sobre nuestros servicios, precios y todo lo que necesites saber. ¿En qué te puedo ayudar hoy?",
+  text: "¡Hola! 👋 Soy **Codex**, el asistente de **Horizen Tecnología & Información**.\n\nEstoy aquí para responder tus dudas sobre nuestros servicios, precios y todo lo que necesites saber. ¿En qué te puedo ayudar hoy?",
 };
 
 export const QUICK_CHIPS = [

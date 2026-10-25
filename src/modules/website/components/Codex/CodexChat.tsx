@@ -138,9 +138,9 @@ export function CodexChat({
           </p>
           <p
             className="font-mono uppercase text-fog"
-            style={{ fontSize: 9, letterSpacing: "0.2em" }}
+            style={{ fontSize: 9, letterSpacing: "0.15em" }}
           >
-            Asistente · Herrera C&amp;T
+            Asistente · Horizen Tecnología &amp; Información
           </p>
         </div>
 
@@ -402,9 +402,9 @@ export function CodexChat({
 
         <p
           className="mt-2 text-center font-mono uppercase text-ash"
-          style={{ fontSize: 9, letterSpacing: "0.22em", opacity: 0.55 }}
+          style={{ fontSize: 9, letterSpacing: "0.15em", opacity: 0.55 }}
         >
-          Codex · Herrera C&amp;T
+          Codex · Horizen Tecnología &amp; Información
         </p>
       </div>
     </motion.div>

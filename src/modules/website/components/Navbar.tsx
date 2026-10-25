@@ -35,15 +35,15 @@ export function Navbar() {
         <a href="#" className="group flex items-center gap-3">
           <div className="logo-badge h-10 w-10 p-1.5 transition-transform duration-300 group-hover:rotate-3 group-hover:scale-110">
             <div className="relative h-full w-full">
-              <Image src="/logo.png" alt="Herrera C&T" fill className="object-contain" />
+              <Image src="/logo.png" alt="Horizen Tecnología & Información" fill className="object-contain" />
             </div>
           </div>
           <div className="leading-tight">
             <span className="font-display block text-sm font-bold uppercase tracking-wide text-snow">
-              Herrera
+              Horizen
             </span>
-            <span className="font-mono block text-[9px] uppercase tracking-[0.28em] text-fog">
-              Consulting &amp; Tech
+            <span className="font-mono block text-[8.5px] uppercase tracking-[0.18em] text-fog whitespace-nowrap">
+              Tecnología &amp; Información
             </span>
           </div>
         </a>

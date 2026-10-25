@@ -10,14 +10,14 @@ export function Footer({ content }: { content: FooterContent }) {
         <div className="flex items-center gap-4">
           <div className="logo-badge h-12 w-12 p-2">
             <div className="relative h-full w-full">
-              <Image src="/logo.png" alt="Herrera C&T" fill className="object-contain" />
+              <Image src="/logo.png" alt="Horizen Tecnología & Información" fill className="object-contain" />
             </div>
           </div>
           <div>
             <p className="font-display text-sm font-bold uppercase tracking-wide text-snow">
-              Herrera{" "}
-              <span className="font-mono text-[9px] font-normal uppercase tracking-[0.26em] text-fog">
-                Consulting &amp; Technology
+              Horizen{" "}
+              <span className="font-mono text-[9px] font-normal uppercase tracking-[0.2em] text-fog">
+                Tecnología &amp; Información
               </span>
             </p>
             <p className="mt-1.5 max-w-sm text-sm text-fog">{content.tagline}</p>

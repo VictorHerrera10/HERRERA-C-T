@@ -19,7 +19,7 @@ const jetbrains = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Herrera Consulting & Technology — Consultoría y Tecnología",
+  title: "Horizen Tecnología & Información — Consultoría y Tecnología",
   description:
     "Diseñamos, construimos y operamos la infraestructura digital de empresas que no pueden permitirse fallar. Software a medida, soporte TI continuo y consultoría estratégica.",
   icons: { icon: "/code.ico" },
