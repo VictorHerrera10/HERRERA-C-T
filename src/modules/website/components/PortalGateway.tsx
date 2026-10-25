@@ -30,7 +30,7 @@ export function PortalGateway() {
       >
         <div className="logo-badge mb-5 h-14 w-14 p-2.5">
           <div className="relative h-full w-full">
-            <Image src="/logo.png" alt="Herrera C&T" fill className="object-contain" />
+            <Image src="/logo.png" alt="Horizen Tecnología & Información" fill className="object-contain" />
           </div>
         </div>
         <p className="section-number mb-3">/ portal de acceso</p>
@@ -38,7 +38,7 @@ export function PortalGateway() {
           ¿Cómo quieres <span className="text-shimmer">entrar?</span>
         </h1>
         <p className="mt-4 max-w-sm text-sm leading-relaxed text-fog">
-          Elige tu tipo de acceso a la plataforma de Herrera C&amp;T.
+          Elige tu tipo de acceso a la plataforma de Horizen Tecnología &amp; Información.
         </p>
       </motion.div>
 
@@ -85,7 +85,7 @@ export function PortalGateway() {
               Portal de colaborador
             </h2>
             <p className="mt-3 flex-1 text-sm leading-relaxed text-fog">
-              Acceso exclusivo para el equipo de Herrera C&amp;T con tu DNI.
+              Acceso exclusivo para el equipo de Horizen Tecnología &amp; Información con tu DNI.
             </p>
             <span className="mt-6 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-azul">
               Entrar

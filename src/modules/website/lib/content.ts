@@ -117,7 +117,7 @@ export const DEFAULT_CONTENT: SiteContent = {
     eyebrow: "La consultora",
     title: "Tecnología seria, trato directo",
     paragraphs: [
-      "Herrera Consulting & Technology nace de una convicción simple: las empresas merecen un socio tecnológico que hable claro, responda rápido y construya para durar.",
+      "Horizen Tecnología & Información nace de una convicción simple: las empresas merecen un socio tecnológico que hable claro, responda rápido y construya para durar.",
       "No vendemos horas: asumimos resultados. Cada proyecto se diseña con la infraestructura, la seguridad y el mantenimiento pensados desde el primer día.",
     ],
     bullets: [
@@ -164,7 +164,7 @@ export const DEFAULT_CONTENT: SiteContent = {
   },
   footer: {
     tagline: "Consultoría y tecnología para empresas que no se detienen.",
-    copyright: "Herrera Consulting & Technology. Todos los derechos reservados.",
+    copyright: "Horizen Tecnología & Información. Todos los derechos reservados.",
   },
   services: [
     {
