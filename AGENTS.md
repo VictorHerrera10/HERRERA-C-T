@@ -4,29 +4,31 @@
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
 
-# Contexto del proyecto — Herrera C&T
+# Contexto del proyecto — Horizen TI (Herrera C&T)
 
-Plataforma de gestión de la consultora Herrera Consulting & Technology. Propuesta completa de módulos en `../PROPUESTA-DESARROLLO.md`; instrucciones en `SETUP.md`.
+Plataforma de gestión integral de la consultora tecnológica Horizen TI (anteriormente Herrera C&T / Herrera Consulting & Technology). Propuesta completa de módulos en `../PROPUESTA-DESARROLLO.md`; instrucciones en `SETUP.md`.
 
-## Arquitectura modular (REGLA: los módulos se conectan pero NO se mezclan)
+## Arquitectura modular y Grafo de Dependencias (Code Graph)
+
+Los módulos se conectan a través de eventos y RPCs, pero NO se mezclan sus capas internas:
 
 ```
 src/modules/
 ├── shared/          → supabase client, Icon, Badge, StatCard, EmptyState, Spinner, Reveal, FloatingIcons, Toast, PageTransition (uso transversal)
-├── website/         → sitio público + su gestor (admin/): components/, admin/, lib/content.ts
+├── website/         → sitio público + su gestor (admin/): components/, admin/, lib/content.ts, Codex (asistente virtual Horizen TI)
 ├── helpdesk/        → mesa de ayuda: lib/tickets.ts, lib/wizard.ts, components/ClientPortal.tsx
-├── quotes/          → cotizaciones: lib/quotes.ts, components/ClientQuoteView.tsx
+├── quotes/          → cotizaciones: lib/quotes.ts, components/ClientQuoteView.tsx (flujo comercial previo a proyectos)
 ├── ventas/          → catálogo + órdenes: lib/ventas.ts, components/GestorVentas.tsx, CatalogoView.tsx
-├── projects/        → ejecución de proyectos (post-venta): lib/projects.ts, components/
-├── finanzas/        → ingresos por proyecto cerrado: lib/finanzas.ts
+├── projects/        → ejecución de proyectos post-venta: lib/projects.ts, components/ (nace de cotización aprobada)
+├── finanzas/        → ingresos por proyecto cerrado: lib/finanzas.ts (conecta con projects y quotes)
 ├── portal-cliente/  → cuenta de cliente (Supabase Auth, correo real): lib/auth.ts, components/
-└── auth/            → login de TRABAJADORES: lib/auth.ts (sesión, catálogo MODULES, canAccess), AuthGuard, PlatformShell (sidebar único de TODA la plataforma interna), SessionCurtain, UsersManager, AreasManager
-src/app/             → solo rutas (delgadas), importan desde modules/
-├── /                → landing (módulo website)
-├── /admin           → gestor del sitio web (módulo website; sub-nav propia tipo píldora dentro del shell, NO sidebar propio)
+└── auth/            → login de TRABAJADORES: lib/auth.ts (sesión DNI, catálogo MODULES, canAccess), AuthGuard, PlatformShell (sidebar único de TODA la plataforma interna), SessionCurtain, UsersManager, AreasManager
+src/app/             → rutas Next.js delgadas que importan desde modules/
+├── /                → landing público (Horizen TI)
+├── /admin           → gestor del sitio web (módulo website; sub-nav tipo píldora dentro del shell, NO sidebar propio)
 ├── /soporte         → portal de soporte del CLIENTE (asistente por pasos, tema oscuro)
 ├── /soporte/gestion → mesa de ayuda de la CONSULTORA
-├── /cotizaciones    → vista del CLIENTE: accede con código + email (`?c=COT-0001&e=correo`) — legado, ver nota portal-cliente
+├── /cotizaciones    → vista del CLIENTE: accede con código + email (`?c=COT-0001&e=correo`)
 ├── /cotizaciones/gestion → gestión de cotizaciones de la CONSULTORA (lista + detalle `[id]`)
 ├── /ventas/gestion  → gestión de catálogo y órdenes
 ├── /proyectos/gestion → ejecución de proyectos (requisitos → desarrollo → gerencia → cerrado)
@@ -39,6 +41,18 @@ src/app/             → solo rutas (delgadas), importan desde modules/
 │   ├── /perfil      → perfil editable + foto (bucket `users`) + cambio de contraseña
 │   └── /usuarios    → SOLO admin (guard `inline`): usuarios, módulos por usuario, /usuarios/areas
 ```
+
+### Relaciones del Grafo de Código (Code Graph):
+1. **Flujo Comercial ➔ Ejecución ➔ Finanzas:**
+   `quotes` (Aprobación interna + Aprobación cliente) ➔ `projects` (`client_projects`: Requisitos ➔ Desarrollo ➔ Gerencia ➔ Cerrado) ➔ `finanzas` (`project_incomes` generados automáticamente o vinculados al cerrar el proyecto).
+2. **Helpdesk:** Asistente inteligente clasificador (`wizard.ts`) ➔ Tickets con prioridad derivada por regla de negocio ➔ Conversación y resolución técnica.
+3. **Doble Modelo de Identidad (Auth):**
+   - **Colaborador / Trabajador (`modules/auth`):** Login DNI (`<dni>@herrera-ct.local`), tabla `app_users`, permisos por `modules` + `areas.default_modules` + `is_admin`, acceso a gestores bajo `PlatformShell`.
+   - **Cliente (`modules/portal-cliente`):** Login con correo corporativo real en Supabase Auth, tabla `client_users`, acceso a `/portal/cliente` para consultar sus cotizaciones, proyectos y tickets.
+4. **Seguridad y Capa de Datos:**
+   - RPCs `SECURITY DEFINER` con prefijo `hct_*` (`hct_current_user_id()`, `hct_user_has_module()`, `hct_client_my_profile()`).
+
+## Shell y Navegación
 
 - **TODA la plataforma interna (gestores + `(plataforma)/`) vive bajo un único shell de navegación: `PlatformShell`** (`modules/auth/components/PlatformShell.tsx`). Un gestor nuevo NO crea su propio header/sidebar — su `layout.tsx` envuelve `children` con `<AuthGuard module="...">` + `<PlatformShell maxWidth="4xl|5xl|7xl">`. `PlatformShell` arma "Mis módulos" dinámicamente desde el catálogo `MODULES`/`canAccess()` en `modules/auth/lib/auth.ts` — agregar el módulo nuevo ahí es lo único necesario para que aparezca en el sidebar.
 - Si un módulo necesita sub-navegación propia (como Admin con sus 5 subpáginas), se resuelve con una fila de píldoras horizontales dentro del contenido (ver `modules/website/admin/AdminTabs.tsx`), no con un segundo sidebar.
@@ -64,4 +78,4 @@ src/app/             → solo rutas (delgadas), importan desde modules/
 - Contenido editable del sitio vive en Supabase (`site_settings`, `services`, `projects`, `testimonials`, `leads`) con fallback en `modules/website/lib/content.ts` (`DEFAULT_CONTENT`). Ojo: la tabla `projects` es el portafolio público del sitio — el módulo interno de ejecución de proyectos usa la tabla `client_projects` para evitar colisión.
 - Si los estilos o imágenes no reflejan cambios: matar el dev server y borrar `.next` (caché agresiva de Turbopack).
 - Tras cambios de UI, verificar visualmente con playwright (devDependency) antes de dar por terminado.
-- Índice codegraph inicializado: en llamadas MCP pasar `projectPath: "C:\HERRERA CT\PLATAFORMA\herrera-ct"`. Reindexar con `codegraph index`.
+- Índice codegraph inicializado: en llamadas MCP pasar `projectPath: "c:\\Users\\Frayd\\Documents\\HERRERA-C-T"`. Reindexar con `codegraph index`.
