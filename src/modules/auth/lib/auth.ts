@@ -9,7 +9,8 @@ export type ModuleKey =
   | "ventas"
   | "projects"
   | "finanzas"
-  | "certificados";
+  | "certificados"
+  | "eventos";
 
 export type ModuleDef = {
   key: ModuleKey;
@@ -78,6 +79,14 @@ export const MODULES: ModuleDef[] = [
     href: "/certificados/gestion",
     icon: "certificate",
     accent: "text-crimson-bright",
+  },
+  {
+    key: "eventos",
+    label: "Eventos y Formación",
+    description: "Cursos, capacitaciones y actividades formativas vinculadas a certificados.",
+    href: "/eventos/gestion",
+    icon: "calendar",
+    accent: "text-azul",
   },
 ];
 

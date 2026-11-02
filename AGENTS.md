@@ -21,6 +21,8 @@ src/modules/
 ├── ventas/          → catálogo + órdenes: lib/ventas.ts, components/GestorVentas.tsx, CatalogoView.tsx
 ├── projects/        → ejecución de proyectos post-venta: lib/projects.ts, components/ (nace de cotización aprobada)
 ├── finanzas/        → ingresos por proyecto cerrado: lib/finanzas.ts (conecta con projects y quotes)
+├── certificados/    → plantillas y verificación: components/ (DiplomaPreview, CertificateVerifier, modals), lib/ (templates.ts, permissions.ts)
+├── eventos/         → eventos y formación: lib/events.ts, components/ (CourseFormModal, CourseDetailModal, EventosAdminView)
 ├── portal-cliente/  → cuenta de cliente (Supabase Auth, correo real): lib/auth.ts, components/
 └── auth/            → login de TRABAJADORES: lib/auth.ts (sesión DNI, catálogo MODULES, canAccess), AuthGuard, PlatformShell (sidebar único de TODA la plataforma interna), SessionCurtain, UsersManager, AreasManager
 src/app/             → rutas Next.js delgadas que importan desde modules/
@@ -33,6 +35,9 @@ src/app/             → rutas Next.js delgadas que importan desde modules/
 ├── /ventas/gestion  → gestión de catálogo y órdenes
 ├── /proyectos/gestion → ejecución de proyectos (requisitos → desarrollo → gerencia → cerrado)
 ├── /finanzas/gestion → ingresos registrados al cerrar un proyecto
+├── /certificados    → verificación pública del CLIENTE/TERCERO (por código o QR)
+├── /certificados/gestion → gestión de plantillas de certificados y emisión
+├── /eventos/gestion → gestión de cursos, actividades formativas y vinculación a certificados
 ├── /portal          → gateway público: "Portal de Cliente" vs "Portal de Colaborador"
 ├── /portal/cliente  → login/registro/panel del cliente (cuenta propia, Supabase Auth)
 ├── /login           → ingreso del TRABAJADOR (DNI; tema oscuro)
@@ -46,10 +51,11 @@ src/app/             → rutas Next.js delgadas que importan desde modules/
 1. **Flujo Comercial ➔ Ejecución ➔ Finanzas:**
    `quotes` (Aprobación interna + Aprobación cliente) ➔ `projects` (`client_projects`: Requisitos ➔ Desarrollo ➔ Gerencia ➔ Cerrado) ➔ `finanzas` (`project_incomes` generados automáticamente o vinculados al cerrar el proyecto).
 2. **Helpdesk:** Asistente inteligente clasificador (`wizard.ts`) ➔ Tickets con prioridad derivada por regla de negocio ➔ Conversación y resolución técnica.
-3. **Doble Modelo de Identidad (Auth):**
+3. **Formación ➔ Certificación:** `eventos` administra cursos, talleres y bootcamps, vinculando condicionalmente plantillas activas de `certificados` (`CertificateTemplate`) con requerimientos de asistencia, evaluaciones técnicas y proyectos finales.
+4. **Doble Modelo de Identidad (Auth):**
    - **Colaborador / Trabajador (`modules/auth`):** Login DNI (`<dni>@herrera-ct.local`), tabla `app_users`, permisos por `modules` + `areas.default_modules` + `is_admin`, acceso a gestores bajo `PlatformShell`.
    - **Cliente (`modules/portal-cliente`):** Login con correo corporativo real en Supabase Auth, tabla `client_users`, acceso a `/portal/cliente` para consultar sus cotizaciones, proyectos y tickets.
-4. **Seguridad y Capa de Datos:**
+5. **Seguridad y Capa de Datos:**
    - RPCs `SECURITY DEFINER` con prefijo `hct_*` (`hct_current_user_id()`, `hct_user_has_module()`, `hct_client_my_profile()`).
 
 ## Shell y Navegación
@@ -78,4 +84,11 @@ src/app/             → rutas Next.js delgadas que importan desde modules/
 - Contenido editable del sitio vive en Supabase (`site_settings`, `services`, `projects`, `testimonials`, `leads`) con fallback en `modules/website/lib/content.ts` (`DEFAULT_CONTENT`). Ojo: la tabla `projects` es el portafolio público del sitio — el módulo interno de ejecución de proyectos usa la tabla `client_projects` para evitar colisión.
 - Si los estilos o imágenes no reflejan cambios: matar el dev server y borrar `.next` (caché agresiva de Turbopack).
 - Tras cambios de UI, verificar visualmente con playwright (devDependency) antes de dar por terminado.
-- Índice codegraph inicializado: en llamadas MCP pasar `projectPath: "c:\\Users\\Frayd\\Documents\\HERRERA-C-T"`. Reindexar con `codegraph index`.
+- **Requisito permanente de Diseño Responsive:** Ningún módulo o cambio de interfaz se considera terminado si solo funciona en escritorio. Priorizar enfoque *Mobile First* y validar como estándar de calidad en:
+  - Móviles pequeños: `320 × 568` y `375 × 667`.
+  - Móviles modernos: `390 × 844` y `430 × 932`.
+  - Tablets: `768 × 1024` y `1024 × 768`.
+  - Laptops: `1280 × 720` y `1366 × 768`.
+  - Escritorio: `1920 × 1080`.
+  Criterios obligatorios en cada pantalla: sin desbordamiento horizontal (`overflow-x`), sin elementos ni botones recortados, textos y badges legibles con wrap natural, áreas táctiles cómodas (mín. 36px), modales teletransportados a `document.body` (`createPortal`) con scroll vertical interno exclusivo (`min-h-0 flex-1 overflow-y-auto`) y sin scroll duplicado.
+- Índice codegraph inicializado: en llamadas MCP pasar `projectPath: "c:\\Users\\Frayd\\Documents\\HERRERA-C-T"`. Reindexar con `npx -y @colbymchenry/codegraph index` (o `codegraph index` si está global).

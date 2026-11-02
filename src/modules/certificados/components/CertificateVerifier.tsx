@@ -1,49 +1,69 @@
 "use client";
 
-import { useState, useEffect, useTransition } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
-import { Badge } from "@/modules/shared/components/Badge";
+import {
+  BadgeCheck,
+  BadgeX,
+  UserRound,
+  GraduationCap,
+  CalendarDays,
+  Fingerprint,
+  Building2,
+  Loader2,
+  RotateCw,
+  WifiOff,
+  X,
+} from "lucide-react";
 import { Icon } from "@/modules/shared/components/Icon";
+import { useToast } from "@/modules/shared/components/Toast";
+
+type CertificateData = {
+  code: string;
+  participantName?: string;
+  trainingName?: string;
+  issuingEntity?: string;
+  issueDate?: string;
+};
 
 type VerificationResult =
   | {
       status: "valid";
-      code: string;
-      participantName: string;
-      trainingName: string;
-      issuingEntity: string;
-      issueDate: string;
+      data: CertificateData;
     }
   | {
-      status: "revoked";
-      code: string;
-      participantName: string;
-      trainingName: string;
-      issuingEntity: string;
-      issueDate: string;
-      revocationReason: string;
-    }
-  | {
-      status: "not_found";
-      code: string;
+      status: "invalid";
+      data: CertificateData;
     }
   | null;
 
-const DEMO_PRESETS = [
-  { code: "HZ-DEMO-VALIDO", label: "Demo Válido", tone: "esmeralda" as const },
-  { code: "HZ-DEMO-ANULADO", label: "Demo Anulado", tone: "crimson" as const },
-  { code: "HZ-NO-EXISTE", label: "No encontrado", tone: "neutral" as const },
-];
+type ActiveModalType = "invalid" | null;
 
 export function CertificateVerifier() {
   const searchParams = useSearchParams();
+  const toast = useToast();
   const [code, setCode] = useState("");
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
   const [result, setResult] = useState<VerificationResult>(null);
-  const [isPending, startTransition] = useTransition();
+  const [activeModal, setActiveModal] = useState<ActiveModalType>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Permite verificar automáticamente si el código viene en la URL (?codigo=... o ?c=...)
+  const resultsRef = useRef<HTMLDivElement | null>(null);
+
+  function triggerScrollToResults() {
+    setTimeout(() => {
+      if (resultsRef.current) {
+        resultsRef.current.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }
+    }, 120);
+  }
+
+  // Verifica automáticamente si el código viene en la URL (?codigo=... o ?c=...)
   useEffect(() => {
     const queryCode = searchParams.get("codigo") || searchParams.get("c");
     if (queryCode && queryCode.trim()) {
@@ -51,7 +71,26 @@ export function CertificateVerifier() {
       setCode(sanitized);
       handleVerify(sanitized);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
+
+  // Manejo de la tecla Escape y control de scroll de fondo para los modales
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape" && activeModal) {
+        setActiveModal(null);
+      }
+    }
+    if (activeModal) {
+      window.addEventListener("keydown", handleKeyDown);
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        window.removeEventListener("keydown", handleKeyDown);
+        document.body.style.overflow = prevOverflow;
+      };
+    }
+  }, [activeModal]);
 
   function handleVerify(rawCode?: string) {
     const targetCode = (typeof rawCode === "string" ? rawCode : code).trim();
@@ -59,62 +98,112 @@ export function CertificateVerifier() {
     if (!targetCode) {
       setValidationError("Por favor ingresa un código de verificación.");
       setResult(null);
+      setActiveModal(null);
       return;
     }
 
     setValidationError(null);
+    setConnectionError(null);
+    setIsLoading(true);
 
-    startTransition(() => {
+    // Simulación de respuesta asíncrona para feedback visual y prevención de solicitudes duplicadas
+    setTimeout(() => {
       const normalized = targetCode.toUpperCase().replace(/\s+/g, "");
 
+      // ── Caso 3: Error de Red o Conexión (Aviso discreto, sin modal invasivo) ──
+      if (
+        normalized === "HZ-ERROR-RED" ||
+        normalized === "ERROR-TECNICO" ||
+        normalized === "HZ-ERROR-CONEXION"
+      ) {
+        setConnectionError(
+          "¡Ups! No logramos conectarnos con el servicio de validación. Comprueba tu conexión e inténtalo nuevamente."
+        );
+        setResult(null);
+        setActiveModal(null);
+        setIsLoading(false);
+        return;
+      }
+
+      // Si la consulta responde con éxito, retiramos cualquier aviso de error previo
+      setConnectionError(null);
+
+      // ── Caso 1: Certificado Válido (SIN MODAL, desplazamiento suave directo) ──
       if (normalized === "HZ-DEMO-VALIDO") {
         setResult({
           status: "valid",
-          code: "HZ-DEMO-VALIDO",
-          participantName: "Juan Pérez García",
-          trainingName: "Fundamentos de Desarrollo de Software",
-          issuingEntity: "Horizen Tecnología e Información",
-          issueDate: "15 de marzo de 2026",
+          data: {
+            code: "HZ-DEMO-VALIDO",
+            participantName: "Juan Pérez García",
+            trainingName: "Fundamentos de Desarrollo de Software",
+            issuingEntity: "Horizen Tecnología e Información",
+            issueDate: "15 de marzo de 2026",
+          },
         });
-      } else if (normalized === "HZ-DEMO-ANULADO") {
-        setResult({
-          status: "revoked",
-          code: "HZ-DEMO-ANULADO",
-          participantName: "Juan Pérez García",
-          trainingName: "Fundamentos de Desarrollo de Software",
-          issuingEntity: "Horizen Tecnología e Información",
-          issueDate: "15 de marzo de 2026",
-          revocationReason:
-            "El certificado con este código figura con estado anulado en esta demostración. La revocación es ilustrativa y demuestra cómo se visualizan credenciales dadas de baja.",
-        });
-      } else {
-        setResult({
-          status: "not_found",
-          code: targetCode,
-        });
+        setActiveModal(null);
+        setIsLoading(false);
+        triggerScrollToResults();
+        return;
       }
-    });
-  }
 
-  function handleQuickFill(sampleCode: string) {
-    setCode(sampleCode);
-    setValidationError(null);
-    handleVerify(sampleCode);
+      if (normalized.startsWith("HZ-SIM-")) {
+        // Soporte para credenciales emitidas conceptualmente en la sesión
+        setResult({
+          status: "valid",
+          data: {
+            code: normalized,
+            participantName: "Sofía Mendoza Morales",
+            trainingName: "Arquitectura Cloud & DevOps",
+            issuingEntity: "Horizen Tecnología e Información",
+            issueDate: new Date().toLocaleDateString("es-PE", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            }),
+          },
+        });
+        setActiveModal(null);
+        setIsLoading(false);
+        triggerScrollToResults();
+        return;
+      }
+
+      // ── Caso 2: Certificado Inválido (Modal de CERTIFICADO INVÁLIDO) ──
+      // Unifica HZ-DEMO-ANULADO, HZ-NO-EXISTE y cualquier código no registrado
+      setResult({
+        status: "invalid",
+        data: {
+          code: targetCode,
+        },
+      });
+      setActiveModal("invalid");
+      setIsLoading(false);
+    }, 550);
   }
 
   function handleReset() {
     setCode("");
     setValidationError(null);
+    setConnectionError(null);
     setResult(null);
+    setActiveModal(null);
+    setIsLoading(false);
+  }
+
+  function handleCopyCode(textToCopy: string) {
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(textToCopy);
+      toast.success("Código copiado al portapapeles", textToCopy);
+    }
   }
 
   return (
-    <div className="relative isolate overflow-hidden pt-28 pb-20 md:pt-36 md:pb-28">
+    <div className="relative isolate overflow-hidden pt-24 pb-20 sm:pt-28 md:pt-36 md:pb-28">
       {/* ── Resplandores y rejilla tecnológica de fondo ── */}
       <div className="pointer-events-none absolute -top-40 left-1/2 -z-10 h-[500px] w-[800px] -translate-x-1/2 rounded-full bg-crimson/10 blur-[130px]" />
       <div className="pointer-events-none absolute top-1/2 right-0 -z-10 h-72 w-72 rounded-full bg-azul/5 blur-[100px]" />
 
-      <div className="mx-auto max-w-4xl px-5 lg:px-8">
+      <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
         {/* ── Cabecera de la sección ── */}
         <div className="text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-edge bg-carbon/80 px-3.5 py-1 backdrop-blur-md">
@@ -136,7 +225,7 @@ export function CertificateVerifier() {
         </div>
 
         {/* ── Tarjeta del formulario de consulta ── */}
-        <div className="hud-corners relative mt-10 rounded-2xl border border-edge bg-carbon/90 p-6 shadow-2xl backdrop-blur-xl sm:p-8">
+        <div className="hud-corners relative mt-8 sm:mt-10 rounded-2xl border border-edge bg-carbon/90 p-5 shadow-2xl backdrop-blur-xl sm:p-8">
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -161,22 +250,23 @@ export function CertificateVerifier() {
                     id="verification-code-input"
                     type="text"
                     value={code}
+                    disabled={isLoading}
                     onChange={(e) => {
                       setCode(e.target.value);
                       if (validationError) setValidationError(null);
                     }}
-                    placeholder="Ej. HZ-2026-A7K9-M2PX"
-                    className={`font-mono w-full rounded-xl border bg-steel/90 py-3.5 pr-4 pl-11 text-sm tracking-wider text-snow placeholder:text-ash focus:outline-none focus:ring-2 transition-all ${
+                    placeholder="Ingresa el código de tu certificado"
+                    className={`font-mono w-full min-h-[48px] rounded-xl border bg-steel/90 py-3 pr-10 pl-11 text-sm tracking-wider text-snow placeholder:text-ash focus:outline-none focus:ring-2 transition-all disabled:opacity-60 disabled:cursor-not-allowed ${
                       validationError
                         ? "border-crimson focus:ring-crimson/50"
                         : "border-edge focus:border-crimson/60 focus:ring-crimson/30"
                     }`}
-                    aria-describedby="code-help-text code-error-text"
-                    aria-invalid={Boolean(validationError)}
+                    aria-describedby="code-help-text code-error-text code-connection-error"
+                    aria-invalid={Boolean(validationError || connectionError)}
                     autoComplete="off"
                     spellCheck="false"
                   />
-                  {code && (
+                  {code && !isLoading && (
                     <button
                       type="button"
                       onClick={() => setCode("")}
@@ -184,65 +274,192 @@ export function CertificateVerifier() {
                       title="Borrar texto"
                       aria-label="Borrar texto"
                     >
-                      <Icon name="x" className="h-4 w-4" />
+                      <X className="h-4 w-4" />
                     </button>
                   )}
                 </div>
 
+                {/* Botón Principal: Transición adaptativa (VERIFICAR CERTIFICADO ↔ VOLVER A INTENTAR) con spinner circular */}
                 <button
                   type="submit"
-                  disabled={isPending}
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-crimson px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-snow shadow-[0_4px_22px_rgba(216,17,43,0.45)] transition-all hover:bg-crimson-bright hover:shadow-[0_6px_28px_rgba(216,17,43,0.6)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-crimson-bright active:scale-[0.98] disabled:opacity-60 cursor-pointer"
+                  disabled={isLoading}
+                  className="inline-flex min-h-[48px] w-full sm:w-auto items-center justify-center gap-2 rounded-xl bg-crimson px-6 py-3 text-xs font-bold uppercase tracking-wider text-snow shadow-[0_4px_22px_rgba(216,17,43,0.45)] transition-all hover:bg-crimson-bright hover:shadow-[0_6px_28px_rgba(216,17,43,0.6)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-crimson-bright active:scale-[0.98] disabled:opacity-75 disabled:cursor-not-allowed cursor-pointer"
                 >
-                  <Icon name="shield" className="h-4 w-4" />
-                  <span>{isPending ? "Consultando..." : "Verificar certificado"}</span>
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin shrink-0" />
+                      <span>Estamos verificando tu certificado…</span>
+                    </>
+                  ) : connectionError ? (
+                    <>
+                      <RotateCw className="h-4 w-4 shrink-0" />
+                      <span>VOLVER A INTENTAR</span>
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="shield" className="h-4 w-4 shrink-0" />
+                      <span>VERIFICAR CERTIFICADO</span>
+                    </>
+                  )}
                 </button>
               </div>
 
-              {/* Mensaje de error de validación */}
+              {/* Mensaje de error de validación de formulario (campo requerido) */}
               {validationError && (
                 <p id="code-error-text" className="font-mono text-xs text-crimson-bright flex items-center gap-1.5 mt-1">
                   <Icon name="alert" className="h-3.5 w-3.5 shrink-0" />
-                  {validationError}
+                  <span>{validationError}</span>
                 </p>
               )}
 
-              {/* Texto auxiliar requerido */}
+              {/* ── Aviso discreto de error de conexión (amigable, sin modal invasivo) ── */}
+              <AnimatePresence>
+                {connectionError && (
+                  <motion.div
+                    id="code-connection-error"
+                    role="alert"
+                    aria-live="polite"
+                    initial={{ opacity: 0, y: -4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -4 }}
+                    className="mt-3 flex items-start gap-2.5 rounded-xl border border-crimson/30 bg-crimson/10 p-3.5 text-xs text-snow/90 backdrop-blur-sm"
+                  >
+                    <WifiOff className="h-4 w-4 shrink-0 text-crimson-bright mt-0.5" />
+                    <p className="leading-relaxed">
+                      {connectionError}
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
+              {/* Texto auxiliar */}
               <p id="code-help-text" className="mt-2 text-xs text-ash flex items-center gap-1.5">
                 <Icon name="info" className="h-3.5 w-3.5 shrink-0 text-fog" />
-                También puedes acceder desde el código QR incluido en el diploma.
+                <span>También puedes acceder automáticamente escaneando el código QR del diploma.</span>
               </p>
             </div>
           </form>
-
-          {/* ── Acceso rápido a códigos de prueba ── */}
-          <div className="mt-6 border-t border-edge/60 pt-4">
-            <div className="flex flex-wrap items-center justify-between gap-2.5">
-              <span className="font-mono text-[11px] uppercase tracking-wider text-fog">
-                Códigos de prueba (demostración):
-              </span>
-              <div className="flex flex-wrap items-center gap-2">
-                {DEMO_PRESETS.map((preset) => (
-                  <button
-                    key={preset.code}
-                    type="button"
-                    onClick={() => handleQuickFill(preset.code)}
-                    className="group inline-flex items-center gap-1.5 rounded-lg border border-edge bg-steel/80 px-2.5 py-1 text-[11px] font-mono text-fog transition-all hover:border-crimson/50 hover:bg-steel hover:text-snow cursor-pointer"
-                    title={`Cargar código ${preset.code}`}
-                  >
-                    <span className="font-semibold text-snow">{preset.code}</span>
-                    <span className="text-[10px] text-ash group-hover:text-fog">({preset.label})</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
         </div>
 
-        {/* ── Zona de Resultados Simulados (3 Estados) ── */}
-        <div aria-live="polite" className="mt-8">
+        {/* ══════════════════════════════════════════════════════════════════
+            VENTANA EMERGENTE (MODAL) RESERVADA EXCLUSIVAMENTE PARA:
+            - CERTIFICADO INVÁLIDO (HZ-DEMO-ANULADO / HZ-NO-EXISTE)
+           ══════════════════════════════════════════════════════════════════ */}
+        <AnimatePresence>
+          {activeModal === "invalid" && result && result.status === "invalid" && (
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="modal-invalido-title"
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+            >
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                onClick={() => setActiveModal(null)}
+                className="fixed inset-0 bg-void/90 backdrop-blur-md z-10"
+                aria-hidden="true"
+              />
+
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 16 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 16 }}
+                transition={{ duration: 0.25, ease: "easeOut" }}
+                className="hud-corners relative w-full max-w-md overflow-hidden rounded-2xl border border-crimson/50 bg-[#0b0c10] p-6 shadow-[0_25px_70px_rgba(0,0,0,0.95)] sm:p-7 z-20"
+              >
+                <div className="pointer-events-none absolute -top-20 -right-20 h-40 w-40 rounded-full bg-crimson/20 blur-[60px]" />
+
+                <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-crimson/15 text-crimson-bright border border-crimson/40 shadow-[0_0_20px_rgba(216,17,43,0.3)]">
+                      <BadgeX className="h-7 w-7 text-crimson-bright stroke-[2.2]" />
+                    </div>
+                    <div>
+                      <span className="font-mono text-[10px] font-semibold uppercase tracking-widest text-fog">
+                        Resultado de verificación
+                      </span>
+                      <h3
+                        id="modal-invalido-title"
+                        className="font-display text-lg font-black uppercase tracking-wider text-crimson-bright"
+                      >
+                        CERTIFICADO INVÁLIDO
+                      </h3>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setActiveModal(null)}
+                    className="rounded-lg p-1.5 text-ash hover:bg-steel hover:text-snow transition-colors cursor-pointer"
+                    aria-label="Cerrar ventana emergente"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+
+                <div className="mt-5 space-y-4">
+                  <div className="rounded-xl border border-crimson/25 bg-blood/15 p-4 text-left">
+                    <p className="text-sm font-medium text-snow leading-relaxed">
+                      El código <span className="font-mono font-bold text-snow break-all">«{result.data.code}»</span> no corresponde a un certificado válido en Horizen TI.
+                    </p>
+                    <p className="mt-2 text-xs text-fog leading-relaxed">
+                      La credencial consultada no cuenta con vigencia, autenticidad ni validez legal o académica por parte de la institución.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="rounded-xl border border-edge/60 bg-steel/60 p-3">
+                      <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-fog flex items-center gap-1">
+                        <Fingerprint className="h-3 w-3 text-crimson-bright shrink-0 stroke-[2]" />
+                        <span>Código</span>
+                      </span>
+                      <p className="font-mono mt-1 text-xs font-bold text-snow truncate">
+                        {result.data.code}
+                      </p>
+                    </div>
+
+                    <div className="rounded-xl border border-edge/60 bg-steel/60 p-3">
+                      <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.16em] text-fog flex items-center gap-1">
+                        <BadgeX className="h-3 w-3 text-crimson-bright shrink-0 stroke-[2]" />
+                        <span>Estado</span>
+                      </span>
+                      <p className="mt-1 flex items-center gap-1 font-bold text-crimson-bright text-xs">
+                        <BadgeX className="h-3.5 w-3.5 shrink-0 stroke-[2]" />
+                        <span>Inválido</span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setActiveModal(null)}
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl bg-steel border border-edge px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-snow hover:border-snow transition-all cursor-pointer"
+                  >
+                    <span>Entendido</span>
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* ── Sección de Resultados (Desplazamiento Directo para Certificado Válido) ── */}
+        <section
+          id="resultado-certificado"
+          ref={resultsRef}
+          tabIndex={-1}
+          aria-live="polite"
+          className="scroll-mt-24 sm:scroll-mt-28 focus:outline-none mt-8 sm:mt-10"
+        >
           <AnimatePresence mode="wait">
-            {/* Estado A: Certificado Válido */}
+            {/* ══════════════════════════════════════════════════════════════
+                ESTADO 1: CERTIFICADO VÁLIDO (Directo en página sin modal)
+               ══════════════════════════════════════════════════════════════ */}
             {result && result.status === "valid" && (
               <motion.div
                 key="valid-result"
@@ -250,111 +467,171 @@ export function CertificateVerifier() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -16 }}
                 transition={{ duration: 0.35, ease: "easeOut" }}
-                className="hud-corners relative overflow-hidden rounded-2xl border border-esmeralda/30 bg-carbon/95 p-6 shadow-2xl backdrop-blur-xl sm:p-8"
+                className="hud-corners relative overflow-hidden rounded-2xl border border-esmeralda/40 bg-carbon/95 p-5 shadow-2xl backdrop-blur-xl sm:p-8"
               >
-                <div className="pointer-events-none absolute top-0 right-0 h-44 w-44 rounded-full bg-esmeralda/10 blur-[80px]" />
+                <div className="pointer-events-none absolute top-0 right-0 h-48 w-48 rounded-full bg-esmeralda/15 blur-[90px]" />
 
                 <div className="relative">
                   {/* Encabezado del resultado */}
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-edge pb-5">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-esmeralda/15 text-esmeralda border border-esmeralda/30">
-                        <Icon name="check" className="h-6 w-6" />
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-edge pb-5">
+                    <div className="flex items-center gap-3.5">
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-esmeralda/15 text-esmeralda border border-esmeralda/40 shadow-[0_0_25px_rgba(31,206,140,0.25)]">
+                        <BadgeCheck className="h-8 w-8 sm:h-9 sm:w-9 text-esmeralda stroke-[2.2]" />
                       </div>
                       <div>
-                        <Badge tone="esmeralda" pulse>
-                          Certificado válido (demostración)
-                        </Badge>
-                        <p className="font-mono mt-1 text-[11px] text-fog">
-                          Código consultado: <span className="font-semibold text-snow">{result.code}</span>
+                        <h2 className="font-display text-xl sm:text-2xl font-black uppercase tracking-wider text-esmeralda flex items-center gap-2">
+                          <span>CERTIFICADO VÁLIDO</span>
+                        </h2>
+                        <p className="font-mono mt-0.5 text-xs text-fog flex items-center gap-1.5">
+                          <Fingerprint className="h-3.5 w-3.5 text-esmeralda shrink-0" />
+                          <span>
+                            Código verificado:{" "}
+                            <span className="font-semibold text-snow">{result.data.code}</span>
+                          </span>
                         </p>
                       </div>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={handleReset}
-                      className="self-start sm:self-auto rounded-lg border border-edge px-3 py-1.5 text-xs font-mono uppercase tracking-wider text-fog hover:border-snow hover:text-snow transition-colors cursor-pointer"
-                    >
-                      Nueva consulta
-                    </button>
-                  </div>
+                    <div className="flex items-center gap-2 self-start sm:self-auto">
+                      <button
+                        type="button"
+                        onClick={() => handleCopyCode(result.data.code)}
+                        className="rounded-lg border border-edge px-3 py-1.5 text-xs font-mono uppercase tracking-wider text-fog hover:border-snow hover:text-snow transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                        title="Copiar código del certificado"
+                      >
+                        <Icon name="copy" className="h-3.5 w-3.5" />
+                        <span>Copiar código</span>
+                      </button>
 
-                  {/* Campos del certificado */}
-                  <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-2">
-                    <div className="rounded-xl border border-edge/60 bg-steel/60 p-4">
-                      <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-fog">
-                        Participante
-                      </span>
-                      <p className="font-display mt-1 text-base font-bold text-snow sm:text-lg">
-                        {result.participantName}
-                      </p>
-                    </div>
-
-                    <div className="rounded-xl border border-edge/60 bg-steel/60 p-4">
-                      <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-fog">
-                        Capacitación / Programa
-                      </span>
-                      <p className="font-display mt-1 text-base font-bold text-snow sm:text-lg">
-                        {result.trainingName}
-                      </p>
-                    </div>
-
-                    <div className="rounded-xl border border-edge/60 bg-steel/60 p-4">
-                      <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-fog">
-                        Entidad emisora
-                      </span>
-                      <p className="mt-1 text-sm font-medium text-snow">
-                        {result.issuingEntity}
-                      </p>
-                    </div>
-
-                    <div className="rounded-xl border border-edge/60 bg-steel/60 p-4">
-                      <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-fog">
-                        Fecha de emisión
-                      </span>
-                      <p className="font-mono mt-1 text-sm font-medium text-snow">
-                        {result.issueDate}
-                      </p>
+                      <button
+                        type="button"
+                        onClick={handleReset}
+                        className="rounded-lg border border-edge px-3 py-1.5 text-xs font-mono uppercase tracking-wider text-fog hover:border-snow hover:text-snow transition-colors cursor-pointer"
+                      >
+                        Nueva consulta
+                      </button>
                     </div>
                   </div>
 
-                  {/* Nota aclaratoria de demostración */}
-                  <div className="mt-6 flex items-start gap-2.5 rounded-xl border border-edge/60 bg-steel/40 p-3.5 text-xs text-ash">
-                    <Icon name="info" className="h-4 w-4 shrink-0 text-fog mt-0.5" />
-                    <span>
-                      <strong className="text-fog">Aviso ilustrativo:</strong> Este resultado corresponde a una
-                      demostración de interfaz con datos simulados. No representa un registro en base de datos de producción.
-                    </span>
+                  {/* ── Destacar especialmente al participante con tamaño considerablemente mayor ── */}
+                  {result.data.participantName && (
+                    <div className="mt-6 rounded-xl border border-esmeralda/35 bg-esmeralda/5 p-5 sm:p-6 backdrop-blur-sm relative overflow-hidden">
+                      <div className="pointer-events-none absolute -right-6 -bottom-6 h-28 w-28 rounded-full bg-esmeralda/10 blur-[40px]" />
+                      <div className="flex items-center gap-2 font-mono text-[11px] font-bold uppercase tracking-widest text-esmeralda">
+                        <UserRound className="h-4 w-4 shrink-0 stroke-[2.2]" />
+                        <span>Participante acreditado</span>
+                      </div>
+                      <p className="font-display mt-2 text-2xl font-black text-snow sm:text-3xl md:text-4xl tracking-tight break-words">
+                        {result.data.participantName}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* ── Datos disponibles del certificado con iconografía Lucide ── */}
+                  <div className="mt-5 grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+                    {result.data.trainingName && (
+                      <div className="rounded-xl border border-edge/60 bg-steel/60 p-4">
+                        <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-fog flex items-center gap-1.5">
+                          <GraduationCap className="h-3.5 w-3.5 text-esmeralda shrink-0 stroke-[2]" />
+                          <span>Capacitación / Actividad</span>
+                        </span>
+                        <p className="font-display mt-1.5 text-base font-bold text-snow sm:text-lg break-words">
+                          {result.data.trainingName}
+                        </p>
+                      </div>
+                    )}
+
+                    {result.data.code && (
+                      <div className="rounded-xl border border-edge/60 bg-steel/60 p-4">
+                        <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-fog flex items-center gap-1.5">
+                          <Fingerprint className="h-3.5 w-3.5 text-esmeralda shrink-0 stroke-[2]" />
+                          <span>Código de certificado</span>
+                        </span>
+                        <div className="mt-1.5 flex items-center justify-between gap-2">
+                          <p className="font-mono text-sm font-bold text-snow tracking-wider break-all">
+                            {result.data.code}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => handleCopyCode(result.data.code)}
+                            className="shrink-0 rounded-lg p-1.5 text-ash hover:bg-steel hover:text-snow transition-colors cursor-pointer"
+                            title="Copiar código"
+                          >
+                            <Icon name="copy" className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {result.data.issueDate && (
+                      <div className="rounded-xl border border-edge/60 bg-steel/60 p-4">
+                        <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-fog flex items-center gap-1.5">
+                          <CalendarDays className="h-3.5 w-3.5 text-esmeralda shrink-0 stroke-[2]" />
+                          <span>Fecha de emisión</span>
+                        </span>
+                        <p className="font-mono mt-1.5 text-sm font-medium text-snow">
+                          {result.data.issueDate}
+                        </p>
+                      </div>
+                    )}
+
+                    {result.data.issuingEntity && (
+                      <div className="rounded-xl border border-edge/60 bg-steel/60 p-4">
+                        <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-fog flex items-center gap-1.5">
+                          <Building2 className="h-3.5 w-3.5 text-esmeralda shrink-0 stroke-[2]" />
+                          <span>Entidad emisora</span>
+                        </span>
+                        <p className="mt-1.5 text-sm font-medium text-snow break-words">
+                          {result.data.issuingEntity}
+                        </p>
+                      </div>
+                    )}
+
+                    <div className="rounded-xl border border-edge/60 bg-steel/60 p-4">
+                      <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-fog flex items-center gap-1.5">
+                        <BadgeCheck className="h-3.5 w-3.5 text-esmeralda shrink-0 stroke-[2]" />
+                        <span>Estado de validación</span>
+                      </span>
+                      <div className="mt-1.5 flex items-center gap-1.5 font-bold text-esmeralda text-sm">
+                        <BadgeCheck className="h-4 w-4 shrink-0 stroke-[2.2]" />
+                        <span>Válido</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </motion.div>
             )}
 
-            {/* Estado B: Certificado Anulado */}
-            {result && result.status === "revoked" && (
+            {/* ══════════════════════════════════════════════════════════════
+                ESTADO 2: CERTIFICADO INVÁLIDO (Persistente en página tras cerrar modal)
+               ══════════════════════════════════════════════════════════════ */}
+            {result && result.status === "invalid" && (
               <motion.div
-                key="revoked-result"
+                key="invalid-result-page"
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -16 }}
                 transition={{ duration: 0.35, ease: "easeOut" }}
-                className="hud-corners relative overflow-hidden rounded-2xl border border-crimson/40 bg-carbon/95 p-6 shadow-2xl backdrop-blur-xl sm:p-8"
+                className="hud-corners relative overflow-hidden rounded-2xl border border-crimson/50 bg-carbon/95 p-5 shadow-2xl backdrop-blur-xl sm:p-8"
               >
-                <div className="pointer-events-none absolute top-0 right-0 h-44 w-44 rounded-full bg-crimson/15 blur-[80px]" />
+                <div className="pointer-events-none absolute top-0 right-0 h-48 w-48 rounded-full bg-crimson/15 blur-[90px]" />
 
                 <div className="relative">
-                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-edge pb-5">
-                    <div className="flex items-center gap-3">
-                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-crimson/15 text-crimson-bright border border-crimson/30">
-                        <Icon name="alert" className="h-6 w-6" />
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b border-edge pb-5">
+                    <div className="flex items-center gap-3.5">
+                      <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-crimson/15 text-crimson-bright border border-crimson/40 shadow-[0_0_25px_rgba(216,17,43,0.3)]">
+                        <BadgeX className="h-8 w-8 sm:h-9 sm:w-9 text-crimson-bright stroke-[2.2]" />
                       </div>
                       <div>
-                        <Badge tone="crimson" pulse>
-                          Certificado anulado (demostración)
-                        </Badge>
-                        <p className="font-mono mt-1 text-[11px] text-fog">
-                          Código consultado: <span className="font-semibold text-snow">{result.code}</span>
+                        <h2 className="font-display text-xl sm:text-2xl font-black uppercase tracking-wider text-crimson-bright">
+                          CERTIFICADO INVÁLIDO
+                        </h2>
+                        <p className="font-mono mt-0.5 text-xs text-fog flex items-center gap-1.5">
+                          <Fingerprint className="h-3.5 w-3.5 text-crimson-bright shrink-0" />
+                          <span>
+                            Código consultado:{" "}
+                            <span className="font-semibold text-snow">{result.data.code}</span>
+                          </span>
                         </p>
                       </div>
                     </div>
@@ -362,90 +639,62 @@ export function CertificateVerifier() {
                     <button
                       type="button"
                       onClick={handleReset}
-                      className="self-start sm:self-auto rounded-lg border border-edge px-3 py-1.5 text-xs font-mono uppercase tracking-wider text-fog hover:border-snow hover:text-snow transition-colors cursor-pointer"
+                      className="self-start sm:self-auto rounded-lg border border-edge px-3.5 py-1.5 text-xs font-mono uppercase tracking-wider text-fog hover:border-snow hover:text-snow transition-colors cursor-pointer"
                     >
                       Nueva consulta
                     </button>
                   </div>
 
-                  {/* Explicación y detalles del estado anulado */}
-                  <div className="mt-5 rounded-xl border border-crimson/20 bg-blood/20 p-4 text-xs text-snow/90 leading-relaxed">
-                    <p className="font-semibold text-crimson-bright mb-1 uppercase tracking-wide font-mono text-[11px]">
-                      Aviso de revocación demostrativa:
-                    </p>
-                    <p>{result.revocationReason}</p>
-                  </div>
-
-                  <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div className="rounded-xl border border-edge/60 bg-steel/60 p-4">
-                      <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-fog">
-                        Entidad emisora
-                      </span>
-                      <p className="mt-1 text-sm font-medium text-snow">
-                        {result.issuingEntity}
+                  <div className="mt-6 space-y-5">
+                    <div className="rounded-xl border border-crimson/25 bg-blood/15 p-5 text-center sm:text-left">
+                      <p className="text-sm font-medium text-snow leading-relaxed">
+                        El código <span className="font-mono font-bold text-snow break-all">«{result.data.code}»</span> no corresponde a un certificado válido en Horizen TI.
+                      </p>
+                      <p className="mt-2 text-xs text-fog leading-relaxed">
+                        La credencial consultada no cuenta con vigencia, autenticidad ni validez legal o académica por parte de la institución.
                       </p>
                     </div>
-                    <div className="rounded-xl border border-edge/60 bg-steel/60 p-4">
-                      <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-fog">
-                        Fecha de registro ilustrativa
-                      </span>
-                      <p className="font-mono mt-1 text-sm font-medium text-snow">
-                        {result.issueDate}
+
+                    <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2">
+                      <div className="rounded-xl border border-edge/60 bg-steel/60 p-4">
+                        <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-fog flex items-center gap-1.5">
+                          <Fingerprint className="h-3.5 w-3.5 text-crimson-bright shrink-0 stroke-[2]" />
+                          <span>Código consultado</span>
+                        </span>
+                        <p className="font-mono mt-1.5 text-sm font-bold text-snow tracking-wider break-all">
+                          {result.data.code}
+                        </p>
+                      </div>
+
+                      <div className="rounded-xl border border-edge/60 bg-steel/60 p-4">
+                        <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-fog flex items-center gap-1.5">
+                          <BadgeX className="h-3.5 w-3.5 text-crimson-bright shrink-0 stroke-[2]" />
+                          <span>Estado de validación</span>
+                        </span>
+                        <div className="mt-1.5 flex items-center gap-1.5 font-bold text-crimson-bright text-sm">
+                          <BadgeX className="h-4 w-4 shrink-0 stroke-[2.2]" />
+                          <span>Inválido</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-start gap-2.5 rounded-xl border border-edge/60 bg-steel/40 p-4 text-xs text-ash">
+                      <Icon name="info" className="h-4 w-4 shrink-0 text-fog mt-0.5" />
+                      <p>
+                        Recomendación: Verifica que el código coincida exactamente con el impreso en el documento (incluyendo guiones) o escanea directamente el código QR correspondiente.
                       </p>
                     </div>
                   </div>
-                </div>
-              </motion.div>
-            )}
-
-            {/* Estado C: Código no encontrado */}
-            {result && result.status === "not_found" && (
-              <motion.div
-                key="not-found-result"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -16 }}
-                transition={{ duration: 0.35, ease: "easeOut" }}
-                className="hud-corners relative overflow-hidden rounded-2xl border border-edge bg-carbon/95 p-6 text-center shadow-2xl backdrop-blur-xl sm:p-8"
-              >
-                <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-edge bg-steel text-fog">
-                  <Icon name="x" className="h-7 w-7 text-crimson-bright" />
-                </div>
-
-                <h2 className="font-display mt-4 text-lg font-bold uppercase tracking-tight text-snow sm:text-xl">
-                  No se encontró un certificado para el código ingresado en esta demostración
-                </h2>
-
-                <p className="mx-auto mt-2 max-w-lg text-xs leading-relaxed text-fog sm:text-sm">
-                  El código <span className="font-mono font-semibold text-snow">"{result.code}"</span> no coincide con ninguno
-                  de los registros de prueba configurados para esta maqueta interactiva.
-                </p>
-
-                <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => handleQuickFill("HZ-DEMO-VALIDO")}
-                    className="rounded-lg bg-crimson px-4 py-2 text-xs font-bold uppercase tracking-wider text-snow hover:bg-crimson-bright transition-all cursor-pointer"
-                  >
-                    Probar con HZ-DEMO-VALIDO
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleReset}
-                    className="rounded-lg border border-edge px-4 py-2 text-xs font-mono uppercase tracking-wider text-fog hover:border-snow hover:text-snow transition-all cursor-pointer"
-                  >
-                    Intentar con otro código
-                  </button>
                 </div>
               </motion.div>
             )}
           </AnimatePresence>
-        </div>
+        </section>
 
-        {/* ── Nota de arquitectura y privacidad futura ── */}
-        <div className="mt-14 rounded-2xl border border-edge/60 bg-steel/40 p-5 backdrop-blur-sm sm:p-6">
+        {/* ── Nota institucional de privacidad y seguridad ── */}
+        <div className="mt-12 sm:mt-14 rounded-2xl border border-edge/60 bg-steel/40 p-5 backdrop-blur-sm sm:p-6">
           <div className="flex items-start gap-3">
-            <div className="rounded-lg bg-steel p-2 text-crimson">
+            <div className="rounded-lg bg-steel p-2 text-crimson shrink-0">
               <Icon name="shield" className="h-5 w-5" />
             </div>
             <div>
