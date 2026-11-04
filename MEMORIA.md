@@ -889,3 +889,32 @@ Optimizar la experiencia de usuario y presentación visual del **Paso 2 (Duraci�
 | **Matriz Responsive (9 resoluciones)** | Playwright + Edge | 320x568, 375x667, 390x844, 430x932, 768x1024, 1024x768, 1280x720, 1366x768, 1920x1080 | **100% Aprobado (0 overflow)** |
 | **Tipado Estático** | `npx tsc --noEmit` | Compilación de TypeScript estricta | **0 errores** |
 | **Errores en Consola del Navegador** | Playwright + Edge | Cero excepciones o errores de JavaScript detectados | **0 errores** |
+
+---
+
+### 5. Pendientes y Próximos Pasos Identificados
+
+Con el **Paso 2 (Duración y cronograma: Horario habitual con excepciones)** completamente implementado, auditado y validado en todas las resoluciones, los siguientes frentes de trabajo corresponden a la evolución del wizard y del módulo:
+
+1. **Refinamiento UX/UI del Paso 3 (Modalidad y Capacidad):**
+   - Optimizar la experiencia visual para la selección de modalidad (`presencial`, `virtual`, `hibrida`), desplegando de manera contextual los campos pertinentes (sede física/aula o enlace a plataforma/campus virtual).
+   - Selector intuitivo de cupos (capacidad máxima editable vs. conmutador de capacidad ilimitada con tooltip informativo).
+
+2. **Refinamiento UX/UI del Paso 4 (Reglas de Asistencia y Evaluación):**
+   - Implementar un calculador de ponderación porcentual dinámico: distribución de pesos entre asistencia mínima obligatoria ($0\text{--}100\%$), evaluación técnica teórica/práctica ($0\text{--}20$) y sustentación de proyecto final integrador.
+   - Validaciones en tiempo real para asegurar que los pesos porcentuales sumen exactamente el $100\%$.
+
+3. **Refinamiento UX/UI del Paso 5 (Clausura y Certificación):**
+   - Previsualización en vivo del diploma oficial Horizen: embeber el componente [`DiplomaPreview`](file:///c:/Users/Frayd/Documents/HERRERA-C-T/src/modules/certificados/components/DiplomaPreview.tsx) cuando se seleccione una plantilla activa, inyectando automáticamente el título de la actividad, facilitador, horas académicas del cronograma y fecha de finalización.
+   - Parametrización interactiva de la ceremonia de clausura (fecha, hora, modalidad y asistencia obligatoria).
+
+4. **Control de Asistencia Sesión por Sesión (Fase Posterior del Módulo):**
+   - Aprovechar el desglose estructurado de [`CourseSession[]`](file:///c:/Users/Frayd/Documents/HERRERA-C-T/src/modules/eventos/lib/events.ts) implementado en el Paso 2 para habilitar el pase de lista de los participantes matriculados en cada clase.
+   - Derivar el porcentaje de asistencia acumulado por alumno y cotejarlo automáticamente con el umbral fijado en el Paso 4.
+
+5. **Emisión y Validación de Diplomas en Cursos Culminados:**
+   - Conexión del flujo de eventos con la emisión oficial en el módulo [`certificados`](file:///c:/Users/Frayd/Documents/HERRERA-C-T/src/modules/certificados/): generar certificados con código de verificación QR al pasar el curso a estado `completed` y cumplirse los requisitos académicos.
+
+6. **Migración de Datos a Supabase (`localStorage` $\rightarrow$ Base de Datos):**
+   - Migrar la persistencia de prototipado actual (`horizen_events_courses_v1`) a tablas relacionales `events_courses` y `events_course_sessions`.
+   - Implementar RLS estricta y funciones RPC `SECURITY DEFINER` con prefijo `hct_*` (`hct_events_courses_list`, `hct_events_courses_upsert`), vinculadas al permiso `hct_user_has_module(v_user_id, 'eventos')`.
