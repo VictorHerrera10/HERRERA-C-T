@@ -39,3 +39,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Capturas de pantalla y evidencias locales
+screenshots-certificados/
+screenshots/
+*.png
+
+# Herramientas de desarrollo local / IDEs
+.codegraph/
+.vscode/
+.idea/

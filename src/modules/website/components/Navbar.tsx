@@ -6,11 +6,12 @@ import Link from "next/link";
 import { motion, useScroll, useMotionValueEvent, AnimatePresence } from "motion/react";
 
 const links = [
-  { href: "#servicios", label: "Servicios" },
-  { href: "#nosotros", label: "Nosotros" },
-  { href: "#metodo", label: "Método" },
-  { href: "#proyectos", label: "Proyectos" },
-  { href: "#contacto", label: "Contacto" },
+  { href: "/#servicios", label: "Servicios" },
+  { href: "/#nosotros", label: "Nosotros" },
+  { href: "/#metodo", label: "Método" },
+  { href: "/#proyectos", label: "Proyectos" },
+  { href: "/certificados", label: "Certificados" },
+  { href: "/#contacto", label: "Contacto" },
 ];
 
 export function Navbar() {
@@ -32,7 +33,7 @@ export function Navbar() {
       }`}
     >
       <nav className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3.5 lg:px-8">
-        <a href="#" className="group flex items-center gap-3">
+        <Link href="/" className="group flex items-center gap-3">
           <div className="logo-badge h-10 w-10 p-1.5 transition-transform duration-300 group-hover:rotate-3 group-hover:scale-110">
             <div className="relative h-full w-full">
               <Image src="/logo.png" alt="Horizen Tecnología & Información" fill className="object-contain" />
@@ -46,11 +47,11 @@ export function Navbar() {
               Tecnología &amp; Información
             </span>
           </div>
-        </a>
+        </Link>
 
         <div className="hidden items-center gap-7 md:flex">
           {links.map((l, i) => (
-            <a
+            <Link
               key={l.href}
               href={l.href}
               className="font-mono group relative text-xs font-medium uppercase tracking-[0.18em] text-fog transition-colors hover:text-snow"
@@ -60,7 +61,7 @@ export function Navbar() {
               </span>
               {l.label}
               <span className="absolute -bottom-1.5 left-0 h-px w-0 bg-crimson transition-all duration-300 group-hover:w-full" />
-            </a>
+            </Link>
           ))}
           <Link
             href="/portal/cliente"
@@ -94,14 +95,14 @@ export function Navbar() {
           >
             <div className="flex flex-col gap-1 px-4 py-3 sm:px-5 sm:py-4">
               {links.map((l) => (
-                <a
+                <Link
                   key={l.href}
                   href={l.href}
                   onClick={() => setOpen(false)}
                   className="font-mono rounded-lg px-3 py-2.5 text-sm uppercase tracking-[0.14em] text-fog hover:bg-steel hover:text-snow"
                 >
                   {l.label}
-                </a>
+                </Link>
               ))}
               <Link
                 href="/portal/cliente"

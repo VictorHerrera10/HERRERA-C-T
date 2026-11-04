@@ -2,7 +2,15 @@
 
 import { supabase } from "@/modules/shared/lib/supabase";
 
-export type ModuleKey = "website" | "helpdesk" | "quotes" | "ventas" | "projects" | "finanzas";
+export type ModuleKey =
+  | "website"
+  | "helpdesk"
+  | "quotes"
+  | "ventas"
+  | "projects"
+  | "finanzas"
+  | "certificados"
+  | "eventos";
 
 export type ModuleDef = {
   key: ModuleKey;
@@ -63,6 +71,22 @@ export const MODULES: ModuleDef[] = [
     href: "/finanzas/gestion",
     icon: "banknote",
     accent: "text-teal-600",
+  },
+  {
+    key: "certificados",
+    label: "Certificados",
+    description: "Plantillas de certificados, configuración y simulación de emisión.",
+    href: "/certificados/gestion",
+    icon: "certificate",
+    accent: "text-crimson-bright",
+  },
+  {
+    key: "eventos",
+    label: "Eventos y Formación",
+    description: "Cursos, capacitaciones y actividades formativas vinculadas a certificados.",
+    href: "/eventos/gestion",
+    icon: "calendar",
+    accent: "text-azul",
   },
 ];
 
